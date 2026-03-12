@@ -1,186 +1,229 @@
 <x-app-layout>
-    {{-- Frappe Gantt Library --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
 
     <style>
-        /* REDESIGNED FRAPPE GANTT CSS */
-        .gantt .grid-header { fill: #f8fafc; stroke: #e2e8f0; }
-        .gantt .grid-row { fill: #ffffff; stroke: #f1f5f9; transition: fill 0.3s ease; }
-        .gantt .grid-row:nth-child(even) { fill: #fcfcfc; }
-        .gantt .grid-row:hover { fill: #f1f5f9; } /* Row hover effect */
-        .gantt .tick text { fill: #64748b; font-family: 'Figtree', sans-serif; font-size: 11px; font-weight: 700; }
-        .gantt .tick line { stroke: #e2e8f0; }
+        /* BASE GRID & TYPOGRAPHY */
+        .gantt .grid-header { fill: #f8fafc; stroke: #f1f5f9; }
+        .gantt .grid-row { fill: #ffffff; stroke: #f8fafc; }
+        .gantt .grid-row:hover { fill: #f8fafc; }
+        .gantt .tick text { fill: #94a3b8; font-family: 'Figtree', sans-serif; font-size: 11px; font-weight: 700; }
+        .gantt .bar-label { font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 12px; fill: #ffffff; }
+
+        /* THEMED PILL BARS */
+        .project-header-row .bar { fill: #800000; cursor: pointer; transition: fill 0.2s; } 
+        .project-header-row .bar:hover { fill: #600000; }
         
-        /* Premium Bar Colors with slight transparency for a modern look */
-        .gantt .bar-wrapper { cursor: pointer; }
-        .gantt .bar-wrapper:hover .bar { opacity: 0.8; }
+        .task-normal .bar { fill: #000080; cursor: pointer; transition: fill 0.2s; } 
+        .task-normal .bar:hover { fill: #000066; }
+        .task-normal .bar-progress { fill: rgba(255, 255, 255, 0.2); } /* Subtle progress overlay */
         
-        /* Normal Tasks - Blue */
-        .task-normal .bar { fill: #3b82f6; }
-        .task-normal .bar-progress { fill: #1e40af; }
-        
-        /* Emergency Tasks - Red */
         .task-emergency .bar { fill: #ef4444; }
-        .task-emergency .bar-progress { fill: #991b1b; }
+        .task-emergency .bar-progress { fill: rgba(255, 255, 255, 0.2); }
         
-        /* Completed Tasks - Green */
         .task-completed .bar { fill: #10b981; }
-        .task-completed .bar-progress { fill: #065f46; }
 
-        .gantt .bar-label { fill: #ffffff; font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 11px; letter-spacing: 0.5px; }
+        /* ACTION BUTTONS (SVG Overlays) */
+        .gantt-action-btn { cursor: pointer; outline: none; }
+        .gantt-action-btn circle { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); stroke: #ffffff; stroke-width: 2; }
+        .gantt-action-btn:hover circle { transform: scale(1.1); }
+        .btn-project circle { fill: #4a0000; } /* Darker Maroon for button */
+        .btn-task circle { fill: #ffffff; }   /* White button for tasks */
+        .btn-task path { fill: #000080; }     /* Blue icon inside white button */
+
+        /* PREMIUM KANBAN-STYLE POPUP */
+        .gantt-container .popup-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            padding: 20px;
+            min-width: 280px;
+            font-family: 'Figtree', sans-serif;
+            border: none;
+            transform: translateY(-5px);
+        }
         
-        /* Redesigned Tooltip */
-        .gantt-container .popup-wrapper { padding: 0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
-        .gantt-container .popup-wrapper .title { background: #0f172a; border-radius: 0; font-family: 'Figtree', sans-serif; font-weight: 800; padding: 12px 16px; color: white; border-bottom: 2px solid #3b82f6; }
-        .gantt-container .popup-wrapper .subtitle { font-family: 'Figtree', sans-serif; font-size: 12px; font-weight: 600; color: #475569; padding: 12px 16px; background: white; }
+        .pop-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .pop-badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-emergency { background: #fee2e2; color: #991b1b; }
+        .badge-normal { background: #f1f5f9; color: #000080; }
+        
+        .pop-id { font-size: 11px; font-weight: 800; color: #94a3b8; }
+        .pop-title { font-weight: 900; color: #1e293b; font-size: 16px; line-height: 1.3; margin-bottom: 16px; }
+        
+        .pop-assignee { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; }
+        .pop-avatar { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+        .pop-name { font-size: 13px; color: #334155; font-weight: 700; }
 
-        /* Dark Mode Overrides */
-        .dark .gantt .grid-header { fill: #0f172a; stroke: #334155; }
-        .dark .gantt .grid-row { fill: #1e293b; stroke: #334155; }
-        .dark .gantt .grid-row:nth-child(even) { fill: #0f172a; }
-        .dark .gantt .grid-row:hover { fill: #334155; }
-        .dark .gantt .tick text { fill: #94a3b8; }
-        .dark .gantt .tick line { stroke: #334155; }
-        .dark .gantt-container .popup-wrapper { border: 1px solid #334155; }
-        .dark .gantt-container .popup-wrapper .subtitle { background: #1e293b; color: #cbd5e1; }
+        .pop-progress-container { margin-top: 10px; }
+        .pop-progress-bar { width: 100%; height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+        .pop-progress-fill { height: 100%; background: #000080; border-radius: 99px; }
+        .pop-progress-text { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #64748b; }
     </style>
 
-    {{-- HIDDEN DATA STORAGE --}}
     <div id="gantt-data-storage" class="hidden" data-tasks="{{ json_encode($ganttTasks) }}"></div>
 
-    {{-- NEW MODERN HEADER --}}
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-50 dark:bg-slate-900 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto py-5 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="py-8 px-4 sm:px-6 lg:px-8 max-w-[100%] mx-auto">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
             
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-indigo-50 dark:bg-indigo-900/50 rounded-xl border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                </div>
+            {{-- Header Toolbar --}}
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
                 <div>
-                    <h2 class="font-black text-2xl text-gray-900 dark:text-white uppercase tracking-tight">
-                        Timeline Matrix
-                    </h2>
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-0.5">Interactive Project Roadmap</p>
+                    <h2 class="font-black text-2xl uppercase tracking-tight text-gray-900">Timeline Matrix</h2>
+                    <p class="text-xs font-bold text-gray-400 mt-1">Interactive Project Roadmap</p>
+                </div>
+                <div class="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
+                    <button onclick="toggleAll(true)" class="px-4 py-2 text-[10px] font-black text-blue-800 hover:bg-white hover:shadow-sm rounded-lg transition-all">EXPAND ALL</button>
+                    <button onclick="toggleAll(false)" class="px-4 py-2 text-[10px] font-black text-maroon-800 hover:bg-white hover:shadow-sm rounded-lg transition-all" style="color: #800000;">COLLAPSE ALL</button>
                 </div>
             </div>
 
-            {{-- Filters --}}
-            <form method="GET" action="{{ route('gantt.index') }}" class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                
-                {{-- Year Filter --}}
-                <div class="w-full sm:w-auto relative">
-                    <select name="filter_year" onchange="this.form.submit()" class="w-full sm:w-40 text-sm font-bold rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm bg-gray-50 py-2.5 dark:bg-slate-800 dark:border-slate-700 dark:text-white transition">
-                        <option value="">-- All Years --</option>
-                        @foreach(range(2023, now()->addYear()->year) as $y)
-                            <option value="{{ $y }}" {{ request('filter_year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Project Filter --}}
-                <div class="w-full sm:w-auto relative">
-                    <select name="project_id" onchange="this.form.submit()" class="w-full sm:w-56 text-sm font-bold rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm bg-gray-50 py-2.5 dark:bg-slate-800 dark:border-slate-700 dark:text-white transition">
-                        <option value="">-- All Projects --</option>
-                        @foreach($projects as $project)
-                            <option value="{{ $project->project_id }}" {{ request('project_id') == $project->project_id ? 'selected' : '' }}>
-                                {{ $project->project_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                
-            </form>
-        </div>
-    </div>
-
-    <div class="py-8">
-        <div class="max-w-[98%] mx-auto sm:px-6 lg:px-8 space-y-6">
-            
-            <div class="bg-white shadow-lg shadow-indigo-100/20 rounded-2xl border border-gray-200 overflow-hidden dark:bg-slate-900 dark:border-slate-800 dark:shadow-none relative">
-                
-                {{-- Top Color Bar Accent --}}
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-
-                {{-- Toolbar --}}
-                <div class="p-5 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                    
-                    {{-- Legend --}}
-                    <div class="flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 py-2 px-4 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-blue-500 shadow-sm"></span> Normal</span>
-                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-red-500 shadow-sm"></span> Emergency</span>
-                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-emerald-500 shadow-sm"></span> Completed</span>
-                    </div>
-                    
-                    {{-- Zoom Controls (Redesigned) --}}
-                    <div class="flex bg-gray-100 border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-xl p-1 shadow-inner" id="zoom-controls">
-                        <button data-zoom="Quarter Day" class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 rounded-lg transition dark:text-gray-400 dark:hover:text-white">Day</button>
-                        <button data-zoom="Half Day" class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 rounded-lg transition dark:text-gray-400 dark:hover:text-white">Week</button>
-                        <button data-zoom="Month" class="px-4 py-1.5 text-xs font-black text-indigo-700 bg-white shadow-sm rounded-lg transition dark:bg-slate-700 dark:text-indigo-400 border border-gray-200 dark:border-slate-600">Month</button>
-                    </div>
-                </div>
-
-                {{-- The Gantt Chart Container --}}
-                <div class="overflow-x-auto p-2 custom-scrollbar bg-gray-50/30 dark:bg-slate-900/50 min-h-[500px]">
-                    @if(count($ganttTasks) > 0)
-                        <svg id="gantt"></svg>
-                    @else
-                        <div class="py-32 text-center flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
-                            <div class="p-6 bg-gray-50 dark:bg-slate-800 rounded-full mb-4 border border-gray-100 dark:border-slate-700 shadow-inner">
-                                <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <p class="font-black text-gray-800 text-xl tracking-tight dark:text-white">No Timeline Data Found</p>
-                            <p class="text-sm mt-2 font-medium">Try adjusting your filters or adding start/due dates to your tasks.</p>
-                        </div>
-                    @endif
-                </div>
+            {{-- Gantt Container --}}
+            <div class="overflow-x-auto min-h-[600px] p-4 bg-gray-50/30">
+                <svg id="gantt"></svg>
             </div>
         </div>
     </div>
 
-    {{-- INITIALIZATION SCRIPT --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const storage = document.getElementById('gantt-data-storage');
-            const tasks = JSON.parse(storage.getAttribute('data-tasks') || '[]');
+        let openProjects = new Set();
+        const rawTasks = JSON.parse(document.getElementById('gantt-data-storage').getAttribute('data-tasks') || '[]');
 
-            if(tasks.length > 0) {
-                var gantt = new Gantt("#gantt", tasks, {
-                    header_height: 55,
-                    column_width: 35,
-                    step: 24,
-                    readonly: true,
-                    view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
-                    bar_height: 32,
-                    bar_corner_radius: 8, // Softer curves for modern look
-                    arrow_curve: 5,
-                    padding: 20,
-                    view_mode: 'Month',
-                    date_format: 'YYYY-MM-DD',
-                    
-                    on_click: function (task) {
-                        if(task.url) { window.location.href = task.url; }
+        function renderGantt() {
+            const filteredTasks = rawTasks.filter(t => t.is_project || openProjects.has(t.project_id))
+                .map(t => {
+                    // Clean names for display
+                    if (t.is_project) return { ...t, name: t.name.replace(/[▶▼]\s*/, '') };
+                    return { ...t, name: t.name.replace('↳ ', '') };
+                });
+
+            new Gantt("#gantt", filteredTasks, {
+                header_height: 60,
+                column_width: 35,
+                view_mode: 'Month',
+                bar_height: 38,
+                bar_corner_radius: 19, // Fully rounded pill shape
+                custom_popup_html: function(task) {
+                    if (task.is_project) {
+                        return `
+                            <div class="p-2">
+                                <div class="text-[10px] font-black text-gray-400 mb-1">PROJECT DIR.</div>
+                                <div class="text-sm font-black" style="color: #800000;">${task.name}</div>
+                            </div>
+                        `;
                     }
-                });
 
-                // Zoom Control Logic
-                document.querySelectorAll('#zoom-controls button').forEach(button => {
-                    button.addEventListener('click', e => {
-                        // Reset all buttons to inactive state
-                        document.querySelectorAll('#zoom-controls button').forEach(b => {
-                            b.classList.remove('bg-white', 'text-indigo-700', 'shadow-sm', 'dark:bg-slate-700', 'dark:text-indigo-400', 'font-black', 'border', 'border-gray-200', 'dark:border-slate-600');
-                            b.classList.add('text-gray-500', 'font-bold', 'dark:text-gray-400');
-                        });
+                    const initial = task.assignee_name ? task.assignee_name.charAt(0).toUpperCase() : '?';
+                    const isEmergency = task.priority_name.toLowerCase() === 'emergency';
+                    const badgeClass = isEmergency ? 'badge-emergency' : 'badge-normal';
+                    
+                    // Visual Progress Bar Color
+                    let progressColor = '#000080';
+                    if (task.status_name.toLowerCase().includes('completed')) progressColor = '#10b981';
+                    if (isEmergency) progressColor = '#ef4444';
+
+                    return `
+                        <div>
+                            <div class="pop-header">
+                                <span class="pop-badge ${badgeClass}">${task.priority_name}</span>
+                                <span class="pop-id">#${task.id.split('_')[1]}</span>
+                            </div>
+                            
+                            <div class="pop-title">${task.name}</div>
+                            
+                            <div class="pop-assignee">
+                                <div class="pop-avatar">${initial}</div>
+                                <div class="pop-name">${task.assignee_name}</div>
+                            </div>
+                            
+                            <div class="pop-progress-container">
+                                <div class="pop-progress-bar">
+                                    <div class="pop-progress-fill" style="width: ${task.progress}%; background-color: ${progressColor};"></div>
+                                </div>
+                                <div class="pop-progress-text">
+                                    <span style="color: ${progressColor};">${task.status_name}</span>
+                                    <span>${task.progress}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+                on_click: function(task) {
+                    if (task.is_project) toggleProject(task.project_id);
+                    else window.location.href = task.url;
+                }
+            });
+
+            injectCircularButtons();
+        }
+
+        function injectCircularButtons() {
+            setTimeout(() => {
+                const bars = document.querySelectorAll('.bar-wrapper');
+                bars.forEach(group => {
+                    const id = group.getAttribute('data-id');
+                    const task = rawTasks.find(t => t.id === id);
+                    if (!task) return;
+
+                    const bar = group.querySelector('.bar');
+                    const x = parseFloat(bar.getAttribute('x'));
+                    const y = parseFloat(bar.getAttribute('y'));
+                    const w = parseFloat(bar.getAttribute('width'));
+                    const h = parseFloat(bar.getAttribute('height'));
+
+                    // Create Action Button Group
+                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    g.setAttribute("class", task.is_project ? "gantt-action-btn btn-project" : "gantt-action-btn btn-task");
+                    
+                    // Overlap the button on the right edge of the pill
+                    const radius = 14;
+                    g.setAttribute("transform", `translate(${x + w - radius - 4}, ${y + (h/2)})`);
+                    
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("r", radius);
+
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("stroke-width", "2.5");
+                    path.setAttribute("stroke-linecap", "round");
+                    path.setAttribute("stroke-linejoin", "round");
+                    path.setAttribute("fill", "none");
+                    
+                    if (task.is_project) {
+                        // Project Dropdown Icon (+ / -)
+                        path.setAttribute("stroke", "#ffffff");
+                        const isOpen = openProjects.has(task.project_id);
+                        path.setAttribute("d", isOpen ? "M-4 0 L4 0" : "M-4 0 L4 0 M0 -4 L0 4");
+                        g.onclick = (e) => { e.stopPropagation(); toggleProject(task.project_id); };
+                    } else {
+                        // Task Navigation Arrow (->)
+                        path.setAttribute("stroke", "#000080");
+                        if (task.priority_name.toLowerCase() === 'emergency') path.setAttribute("stroke", "#ef4444");
                         
-                        // Apply active state to clicked button
-                        e.target.classList.add('bg-white', 'text-indigo-700', 'shadow-sm', 'dark:bg-slate-700', 'dark:text-indigo-400', 'font-black', 'border', 'border-gray-200', 'dark:border-slate-600');
-                        e.target.classList.remove('text-gray-500', 'font-bold', 'dark:text-gray-400');
-                        
-                        // Update Gantt view
-                        gantt.change_view_mode(e.target.getAttribute('data-zoom'));
-                    });
+                        path.setAttribute("d", "M-3 -4 L2 0 L-3 4"); 
+                        path.setAttribute("transform", "translate(1, 0)"); // visual center adjustment
+                        g.onclick = (e) => { e.stopPropagation(); window.location.href = task.url; };
+                    }
+
+                    g.appendChild(circle);
+                    g.appendChild(path);
+                    group.appendChild(g);
                 });
-            }
-        });
+            }, 50);
+        }
+
+        function toggleProject(pid) {
+            if (openProjects.has(pid)) openProjects.delete(pid);
+            else openProjects.add(pid);
+            renderGantt();
+        }
+
+        function toggleAll(expand) {
+            if (expand) rawTasks.forEach(t => t.is_project && openProjects.add(t.project_id));
+            else openProjects.clear();
+            renderGantt();
+        }
+
+        if (rawTasks.length > 0) renderGantt();
     </script>
 </x-app-layout>
