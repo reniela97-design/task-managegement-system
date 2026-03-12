@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome'); // <--- This is what Laravel was looking for!
 
 // Group all routes that require the user to be logged in
 Route::middleware(['auth', 'verified'])->group(function () {
