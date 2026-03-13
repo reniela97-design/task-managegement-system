@@ -12,6 +12,13 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
+        <script>
+    // This script runs INSTANTLY before the body loads
+    if (localStorage.getItem('sidebarExpanded') === 'false') {
+        document.documentElement.classList.add('sidebar-collapsed');
+    }
+</script>
+
         <style>
             /* Smooth scrolling and custom scrollbar */
             html { scroll-behavior: smooth; }
@@ -20,23 +27,51 @@
             ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
             ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
             [x-cloak] { display: none !important; }
+            
+            /* Anti-jitter safety: forces width to match Tailwind's md:w-24 before Alpine loads */
+            html.sidebar-collapsed aside { width: 6rem !important; } 
+
+            /* resources/views/layouts/app.blade.php */
+
+/* 1. Force the sidebar width immediately */
+html.sidebar-collapsed aside { 
+    width: 6rem !important; 
+}
+
+/* 2. Hide all nav text spans immediately when collapsed */
+html.sidebar-collapsed aside span, 
+html.sidebar-collapsed aside .ml-3 {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* 3. Hide the logo and menu headers immediately */
+html.sidebar-collapsed aside img,
+html.sidebar-collapsed aside .uppercase {
+    display: none !important;
+}
         </style>
     </head>
     <body class="font-sans antialiased bg-slate-50 text-slate-900 
 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] 
 from-slate-100 via-slate-50 to-blue-50/30">
 
-        
         <div x-data="{ 
-                sidebarExpanded: localStorage.getItem('sidebarExpanded') === 'true',
-                mobileOpen: false,
-                toggleSidebar() {
-                    this.sidebarExpanded = !this.sidebarExpanded;
-                    localStorage.setItem('sidebarExpanded', this.sidebarExpanded);
-                }
-            }"
-            x-init="$watch('sidebarExpanded', value => localStorage.setItem('sidebarExpanded', value))"
-            class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
+        sidebarExpanded: localStorage.getItem('sidebarExpanded') === null ? true : localStorage.getItem('sidebarExpanded') === 'true',
+        mobileOpen: false,
+        toggleSidebar() {
+            this.sidebarExpanded = !this.sidebarExpanded;
+            localStorage.setItem('sidebarExpanded', this.sidebarExpanded);
+            
+            // This ensures the CSS classes stay in sync with the state
+            if (this.sidebarExpanded) {
+                document.documentElement.classList.remove('sidebar-collapsed');
+            } else {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        }
+    }"
+    class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
             
             <aside :class="sidebarExpanded ? 'md:w-72' : 'md:w-24'" 
                    class="hidden md:flex flex-col flex-shrink-0 z-50 h-screen sticky top-0 transition-all duration-500 ease-in-out">
