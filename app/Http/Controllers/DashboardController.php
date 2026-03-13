@@ -14,6 +14,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         
         // --- 1. SETUP TASK QUERY ---
@@ -72,25 +73,51 @@ class DashboardController extends Controller
         $completionPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
 
         // --- 3. CALENDAR EVENTS ---
-        $calendarTasks = (clone $query)->where('task_status_id', '!=', 3)
-                                       ->whereNotNull('task_due_date')
-                                       ->get();
+        // Fetch all relevant tasks instead of just those with due dates
+        $calendarTasks = (clone $query)->get();
 
-        $events = $calendarTasks->map(function ($task) {
+        $events = $calendarTasks->flatMap(function ($task) {
+            $isCompleted = $task->task_status_id == 3;
             $isEmergency = $task->task_priority_id == 1;
-            $color = $isEmergency ? '#7f1d1d' : '#1e3a8a'; 
-            
-            return [
-                'id' => $task->task_id,
-                'title' => $task->task_title,
-                'start' => $task->task_due_date, 
+
+            if ($isCompleted) {
+                $color = '#059669'; // Emerald Green
+            } elseif ($isEmergency) {
+                $color = '#7f1d1d'; // Red
+            } else {
+                $color = '#1e3a8a'; // Blue
+            }
+
+            $calendarEvents = [];
+
+            // 1. Task Creation / Start Marker
+            $calendarEvents[] = [
+                'id' => 'task_created_' . $task->task_id,
+                'title' => ($isCompleted ? '✔ ' : '[NEW] ') . $task->task_title,
+                'start' => Carbon::parse($task->task_log_datetime)->format('Y-m-d'),
                 'allDay' => true,
                 'url' => route('tasks.show', $task->task_id),
                 'backgroundColor' => $color,
                 'borderColor' => $color,
                 'priority_sort' => $task->task_priority_id
             ];
-        });
+
+            // 2. Task Finished Marker (Only if completed)
+            if ($isCompleted && !empty($task->task_date_end)) {
+                $calendarEvents[] = [
+                    'id' => 'task_finished_' . $task->task_id,
+                    'title' => '🏁 [FINISHED] ' . $task->task_title,
+                    'start' => Carbon::parse($task->task_date_end)->format('Y-m-d'),
+                    'allDay' => true,
+                    'url' => route('tasks.show', $task->task_id),
+                    'backgroundColor' => '#059669',
+                    'borderColor' => '#059669',
+                    'priority_sort' => $task->task_priority_id
+                ];
+            }
+
+            return $calendarEvents;
+        })->values(); // Ensure it returns a clean, zero-indexed array for JSON parsing
 
         // --- 4. NOTIFICATIONS ---
         $notifications = Auth::user()
@@ -116,4 +143,4 @@ class DashboardController extends Controller
             'notifications'
         ));
     }
-}
+}   
