@@ -2,38 +2,33 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Create Role (role_user_id is NULL initially)
-        $adminRole = Role::create([
-            'role_name' => 'Administrator',
-            'role_inactive' => false,
-        ]);
-
-        // 2. Create User
-        $adminUser = User::create([
-            'user_name' => 'Admin',
-            'user_email' => 'admin@gmail.com',
-            'user_password' => Hash::make('admin'),
-            'user_role_id' => $adminRole->role_id,
-            'user_inactive' => false,
-        ]);
-
-        // 3. FIX: Now that the user exists, update the Role to point to them
-        $adminRole->update([
-            'role_user_id' => $adminUser->user_id
-        ]);
-
-        // 4. CALL YOUR OTHER SEEDERS HERE:
+        // First, seed roles WITHOUT user_id references
+        $this->call(RoleSeeder::class);
+        
+        // Then seed users with role_id references
+        $this->call(UserSeeder::class);
+        
+        // Then update roles with user_id references after users exist
+        $this->call(RoleUserUpdateSeeder::class);
+        
+        // Then seed the rest of the tables
         $this->call([
             PrioritySeeder::class,
+            StatusSeeder::class,
+            SystemSeeder::class,
+            CategorySeeder::class,
+            TypeSeeder::class,
+            ClientSeeder::class,
+            ProjectSeeder::class,
+            TaskSeeder::class,
+            ActivitySeeder::class,
+            PersonalNoteSeeder::class,
         ]);
     }
 }
