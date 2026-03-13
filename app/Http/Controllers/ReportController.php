@@ -22,6 +22,7 @@ class ReportController extends Controller
      */
     public function index(Request $request): View
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         
         $users = User::where('user_inactive', false)->get();
@@ -88,6 +89,7 @@ class ReportController extends Controller
      */
     public function calendar(Request $request): View
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         
         $query = Task::with(['status', 'system', 'client', 'project', 'priority', 'assignee']);
@@ -229,7 +231,9 @@ class ReportController extends Controller
             'note_text' => 'nullable|string'
         ]);
 
-        $userId = Auth::user()->user_id;
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $userId = $user->user_id;
 
         // If the note text is empty, delete it
         if (empty($request->note_text)) {

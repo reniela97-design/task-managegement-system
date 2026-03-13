@@ -41,8 +41,7 @@
     <div id="dashboard-data" class="hidden"
          data-not-started="{{ $notStartedCount }}"
          data-in-progress="{{ $inProgressCount }}"
-         data-completed="{{ $completedTasks }}"
-         data-events="{{ json_encode($events) }}">
+         data-completed="{{ $completedTasks }}">
     </div>
 
     {{-- SYSTEM HEADER WITH MINIMALIST NOTIFICATION BELL --}}
@@ -442,7 +441,9 @@
             const notStarted = parseInt(dashboardData.getAttribute('data-not-started')) || 0;
             const inProgress = parseInt(dashboardData.getAttribute('data-in-progress')) || 0;
             const completed = parseInt(dashboardData.getAttribute('data-completed')) || 0;
-            const eventsData = JSON.parse(dashboardData.getAttribute('data-events') || '[]');
+            
+            // 🚀 FIX: Load events safely via Blade JSON directive instead of DOM Attribute
+            const eventsData = @json($events);
 
             // 1. BAR CHART CONFIGURATION
             const ctx = document.getElementById('taskBarChart');
