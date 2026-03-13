@@ -58,7 +58,6 @@ class ReportController extends Controller
             if ($filterMonth && $endDate->format('m') != str_pad($filterMonth, 2, '0', STR_PAD_LEFT)) return false;
             return true;
         })->map(function ($task) {
-            // FIX: Ensure only the 'Y-m-d' portion is used before attaching the time
             $dateStartStr = Carbon::parse($task->task_date_start)->format('Y-m-d');
             $dateEndStr   = Carbon::parse($task->task_date_end)->format('Y-m-d');
             
@@ -101,9 +100,11 @@ class ReportController extends Controller
             $query->where('task_assign_to', $user->user_id);
         }
 
-        $tasks = $query->whereNotNull('task_date_start')->whereNotNull('task_due_date')->get();
+        // Removed the whereNotNull restrictions to get ALL tasks immediately upon creation
+        $tasks = $query->get();
 
-        $events = $tasks->map(function ($task) {
+        // Use flatMap to potentially return multiple calendar events (start marker & finish marker)
+        $events = $tasks->flatMap(function ($task) {
             $isCompleted = $task->task_status_id == 3;
             $isEmergency = $task->task_priority_id == 1;
             $isLowPriority = $task->task_priority_id == 3; 
@@ -118,11 +119,14 @@ class ReportController extends Controller
                 $color = '#1e3a8a'; 
             }
 
-            return [
-                'id' => 'task_' . $task->task_id,
-                'title' => ($isCompleted ? '✔ ' : '') . "[" . ($task->system->system_name ?? 'Gen') . "] " . $task->task_title,
-                'start' => $isCompleted ? $task->task_date_end : $task->task_date_start,
-                'end' => Carbon::parse($isCompleted ? $task->task_date_end : $task->task_due_date)->addDay()->format('Y-m-d'),
+            $calendarEvents = [];
+
+            // 1. Task Creation / Start Marker
+            $calendarEvents[] = [
+                'id' => 'task_created_' . $task->task_id,
+                'title' => ($isCompleted ? '✔ ' : '[NEW] ') . "[" . ($task->system->system_name ?? 'Gen') . "] " . $task->task_title,
+                'start' => Carbon::parse($task->task_log_datetime)->format('Y-m-d'), // Placed on creation date
+                // Note: 'end' is deliberately omitted so it does not span across dates
                 'url' => route('tasks.show', $task->task_id),
                 'backgroundColor' => $color,
                 'borderColor' => $color,
@@ -133,13 +137,40 @@ class ReportController extends Controller
                     'client' => $task->client->client_name ?? 'Internal',
                     'project' => $task->project->project_name ?? 'N/A',
                     'status' => $task->status->status_name ?? 'Unknown',
-                    'due_date' => Carbon::parse($task->task_due_date)->format('M d, Y'),
+                    'due_date' => $task->task_due_date ? Carbon::parse($task->task_due_date)->format('M d, Y') : 'N/A',
                     'assigned_to' => $task->assignee->user_name ?? 'Unassigned',
                     'is_completed' => $isCompleted,
                     'finished_at' => $task->task_date_end ? Carbon::parse($task->task_date_end)->format('M d, Y') : 'N/A',
                     'is_emergency' => $isEmergency
                 ]
             ];
+
+            // 2. Task Finished Marker (Only if the task is finished)
+            if ($isCompleted && !empty($task->task_date_end)) {
+                $calendarEvents[] = [
+                    'id' => 'task_finished_' . $task->task_id,
+                    'title' => '🏁 [FINISHED] ' . $task->task_title,
+                    'start' => Carbon::parse($task->task_date_end)->format('Y-m-d'), // Placed on finish date
+                    'url' => route('tasks.show', $task->task_id),
+                    'backgroundColor' => '#059669', // Emerald Green for completion
+                    'borderColor' => '#059669',
+                    'extendedProps' => [
+                        'type' => 'task',
+                        'full_title' => $task->task_title,
+                        'system' => $task->system->system_name ?? 'General',
+                        'client' => $task->client->client_name ?? 'Internal',
+                        'project' => $task->project->project_name ?? 'N/A',
+                        'status' => $task->status->status_name ?? 'Unknown',
+                        'due_date' => $task->task_due_date ? Carbon::parse($task->task_due_date)->format('M d, Y') : 'N/A',
+                        'assigned_to' => $task->assignee->user_name ?? 'Unassigned',
+                        'is_completed' => true,
+                        'finished_at' => Carbon::parse($task->task_date_end)->format('M d, Y'),
+                        'is_emergency' => false
+                    ]
+                ];
+            }
+
+            return $calendarEvents;
         });
 
         // Fetch Personal Notes securely for the logged-in user only
