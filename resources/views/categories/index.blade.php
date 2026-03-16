@@ -1,55 +1,69 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Categories Management') }}
-        </h2>
-    </x-slot>
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 class="font-bold text-2xl text-blue-900 uppercase tracking-tight">
+                {{ __('Categories') }}
+            </h2>
+            
+            <div class="flex items-center gap-3">
+                <form method="GET" action="{{ route('categories.index') }}" class="flex items-center gap-2">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search categories..." class="text-sm rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900 py-1.5 px-3">
+                    <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1.5 px-3 rounded-lg border border-gray-300 transition text-xs uppercase tracking-wide">Filter</button>
+                    @if(request('search'))
+                        <a href="{{ route('categories.index') }}" class="text-gray-500 hover:text-red-600 text-[10px] font-bold uppercase transition">Clear</a>
+                    @endif
+                </form>
+
+                <a href="{{ route('categories.create') }}" class="bg-blue-900 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded shadow-md transition text-xs uppercase tracking-wide">
+                    + Add Category
+                </a>
+            </div>
+        </div>
+    </div>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                
-                <div class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <form method="GET" action="{{ route('categories.index') }}" class="flex items-center gap-2">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search categories..." class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                        <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded text-sm">Filter</button>
-                        @if(request('search'))
-                            <a href="{{ route('categories.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Clear</a>
-                        @endif
-                    </form>
-
-                    <a href="{{ route('categories.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
-                        + New Category
-                    </a>
-                </div>
-
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-left text-sm font-light text-gray-900 dark:text-gray-100">
-                        <thead class="border-b bg-gray-50 dark:bg-gray-700 font-medium">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-900 uppercase font-bold text-xs border-b border-gray-200">
                             <tr>
+                                <th class="px-6 py-4">ID</th>
                                 <th class="px-6 py-4">Category Name</th>
-                                <th class="px-6 py-4">Actions</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($categories as $category)
-                            <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 font-bold">{{ $category->category_name }}</td>
-                                <td class="px-6 py-4 flex gap-3">
-                                    <a href="{{ route('categories.edit', $category->category_id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                    <form action="{{ route('categories.destroy', $category->category_id) }}" method="POST" onsubmit="return confirm('Delete this category?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse ($categories as $category)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 font-medium">{{ $category->category_id }}</td>
+                                    <td class="px-6 py-4 font-bold text-gray-800">{{ $category->category_name }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end items-center gap-3">
+                                            <a href="{{ route('categories.edit', $category->category_id) }}" class="text-gray-400 hover:text-blue-600 transition" title="Edit">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </a>
+                                            
+                                            <form method="POST" action="{{ route('categories.destroy', $category->category_id) }}" onsubmit="return confirm('Are you sure?');" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-gray-400 hover:text-red-600 transition" title="Delete">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="2" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                    No categories found.
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td colspan="3" class="px-6 py-8 text-center text-gray-400 italic">
+                                        No categories found.
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
