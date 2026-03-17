@@ -10,59 +10,113 @@ use Illuminate\Http\RedirectResponse;
 
 class RoleController extends Controller
 {
-    public function index(): View
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): View
     {
-        // Only fetch active roles
-        $roles = Role::where('role_inactive', false)->get();
+        $query = Role::where('role_inactive', false);
+
+        if ($request->filled('search')) {
+            $query->where('role_name', 'like', "%{$request->search}%");
+        }
+
+        $roles = $query->get();
         return view('roles.index', compact('roles'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create(): View
     {
         return view('roles.create');
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'role_name' => 'required|string|max:255|unique:roles,role_name',
+        $request->validate([
+            'role_name' => 'required|string|max:255',
         ]);
 
+        // Check for duplicate role name (R1.3 - Role already in list)
+        $existingRole = Role::where('role_name', $request->role_name)
+            ->where('role_inactive', false)
+            ->first();
+        
+        if ($existingRole) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'The Role name is already in the list');
+        }
+
         Role::create([
-            'role_name' => $validated['role_name'],
-            'role_user_id' => Auth::id(), // Log who created it
+            'role_name' => $request->role_name,
+            'role_user_id' => Auth::id(),
             'role_inactive' => false,
         ]);
 
-        return redirect()->route('roles.index')->with('status', 'Role created successfully!');
+        // R1.4 - Redirect to Role List with success message
+        return redirect()->route('roles.index')
+            ->with('success', 'Role created successfully!');
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Role $role): View
     {
         return view('roles.edit', compact('role'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Role $role): RedirectResponse
     {
-        $validated = $request->validate([
-            'role_name' => 'required|string|max:255|unique:roles,role_name,' . $role->role_id . ',role_id',
+        $request->validate([
+            'role_name' => 'required|string|max:255',
         ]);
+
+        // Check for duplicate role name (R2.3 - excluding current role)
+        $existingRole = Role::where('role_name', $request->role_name)
+            ->where('role_inactive', false)
+            ->where('role_id', '!=', $role->role_id)
+            ->first();
+        
+        if ($existingRole) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'The Role name is already in the list');
+        }
 
         $role->update([
-            'role_name' => $validated['role_name'],
+            'role_name' => $request->role_name
         ]);
 
-        return redirect()->route('roles.index')->with('status', 'Role updated successfully!');
+        // R2.3 - Success message "UPDATE SUCCESSFULLY"
+        return redirect()->route('roles.index')
+            ->with('success', 'Role updated successfully!');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Role $role): RedirectResponse
     {
-        // Prevent deleting the Administrator role to avoid locking yourself out
+        // Prevent deleting the Administrator role to avoid locking yourself out (R3.2)
         if ($role->role_name === 'Administrator') {
-            return back()->with('error', 'Cannot delete the Administrator role.');
+            return redirect()->route('roles.index')
+                ->with('error', 'Cannot delete the Administrator role.');
         }
 
         $role->update(['role_inactive' => true]);
-        return redirect()->route('roles.index')->with('status', 'Role deleted successfully!');
+        
+        // R3.2 - Success message after deletion
+        return redirect()->route('roles.index')
+            ->with('success', 'Role deleted successfully!');
     }
 }

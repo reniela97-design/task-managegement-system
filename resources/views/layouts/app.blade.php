@@ -105,9 +105,16 @@ from-slate-100 via-slate-50 to-blue-50/30">
                                 </div>
                             </div>
 
-                            <!-- Conditionally show search bar - hide on category create/edit pages -->
+                            <!-- Conditionally show search bar - hide on ALL create/edit pages -->
                             @php
-                                $hideSearch = request()->routeIs('categories.create') || request()->routeIs('categories.edit');
+                                $hideSearch = request()->routeIs('categories.create') || 
+                                              request()->routeIs('categories.edit') ||
+                                              request()->routeIs('systems.create') || 
+                                              request()->routeIs('systems.edit') ||
+                                              request()->routeIs('types.create') || 
+                                              request()->routeIs('types.edit') ||
+                                              request()->routeIs('roles.create') || 
+                                              request()->routeIs('roles.edit');
                             @endphp
 
                             @if(!$hideSearch)

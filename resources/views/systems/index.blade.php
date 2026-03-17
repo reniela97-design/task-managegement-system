@@ -6,13 +6,27 @@
             </h2>
             
             <div class="flex items-center gap-3">
-                <form method="GET" action="{{ route('systems.index') }}" class="flex items-center gap-2">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search systems..." class="text-sm rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900 py-1.5 px-3">
-                    <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1.5 px-3 rounded-lg border border-gray-300 transition text-xs uppercase tracking-wide">Filter</button>
-                    @if(request('search'))
-                        <a href="{{ route('systems.index') }}" class="text-gray-500 hover:text-red-600 text-[10px] font-bold uppercase transition">Clear</a>
-                    @endif
-                </form>
+                <!-- Live Search with Label on Left - Clear button inside -->
+                <div class="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden">
+                    <span class="px-3 text-sm font-medium text-gray-600 bg-gray-50 py-1.5 border-r border-gray-300">Search:</span>
+                    <div class="relative">
+                        <input type="text" 
+                               id="search-input" 
+                               value="{{ request('search') }}" 
+                               placeholder="" 
+                               class="text-sm py-1.5 pl-3 pr-8 focus:outline-none w-48"
+                               autocomplete="off">
+                        
+                        <!-- Clear button inside the input -->
+                        <button id="clear-search" 
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-600 transition {{ request('search') ? '' : 'hidden' }}"
+                                onclick="clearSearch()">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
                 <a href="{{ route('systems.create') }}" class="bg-blue-900 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded shadow-md transition text-xs uppercase tracking-wide">
                     + Add System
@@ -21,11 +35,36 @@
         </div>
     </div>
 
+    <!-- Success/Error Messages with Fade Out -->
+    @if(session('success'))
+        <div id="success-message" class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8 transition-opacity duration-1000">
+            @if(str_contains(session('success'), 'deleted'))
+                <!-- Delete success message in red -->
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @else
+                <!-- Other success messages in green -->
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div id="error-message" class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8 transition-opacity duration-1000">
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-gray-600">
+                    <table class="w-full text-left text-sm text-gray-600" id="systems-table">
                         <thead class="bg-gray-50 text-gray-900 uppercase font-bold text-xs border-b border-gray-200">
                             <tr>
                                 <th class="px-6 py-4">ID</th>
@@ -33,11 +72,11 @@
                                 <th class="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach ($systems as $system)
-                                <tr class="hover:bg-gray-50 transition">
+                        <tbody class="divide-y divide-gray-100" id="table-body">
+                            @forelse ($systems as $system)
+                                <tr class="hover:bg-gray-50 transition system-row" data-name="{{ strtolower($system->system_name) }}">
                                     <td class="px-6 py-4 font-medium">{{ $system->system_id }}</td>
-                                    <td class="px-6 py-4 font-bold text-gray-800">{{ $system->system_name }}</td>
+                                    <td class="px-6 py-4 font-bold text-gray-800 system-name">{{ $system->system_name }}</td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex justify-end items-center gap-3">
                                             <a href="{{ route('systems.edit', $system->system_id) }}" class="text-gray-400 hover:text-blue-600 transition" title="Edit">
@@ -46,7 +85,7 @@
                                                 </svg>
                                             </a>
                                             
-                                            <form method="POST" action="{{ route('systems.destroy', $system->system_id) }}" onsubmit="return confirm('Are you sure?');" class="inline">
+                                            <form method="POST" action="{{ route('systems.destroy', $system->system_id) }}" onsubmit="return confirm('Are you sure you want to delete this system?');" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-gray-400 hover:text-red-600 transition" title="Delete">
@@ -58,18 +97,108 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
-                            @if($systems->isEmpty())
-                                <tr>
+                            @empty
+                                <tr id="no-results-row">
                                     <td colspan="3" class="px-6 py-8 text-center text-gray-400 italic">
                                         No systems found.
                                     </td>
                                 </tr>
-                            @endif
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- JavaScript for live search and fade out messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade out success message after 2 seconds
+            const successMsg = document.getElementById('success-message');
+            if (successMsg) {
+                setTimeout(() => {
+                    successMsg.style.transition = 'opacity 1s';
+                    successMsg.style.opacity = '0';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 1000);
+                }, 2000);
+            }
+
+            // Fade out error message after 2 seconds
+            const errorMsg = document.getElementById('error-message');
+            if (errorMsg) {
+                setTimeout(() => {
+                    errorMsg.style.transition = 'opacity 1s';
+                    errorMsg.style.opacity = '0';
+                    setTimeout(() => {
+                        errorMsg.style.display = 'none';
+                    }, 1000);
+                }, 2000);
+            }
+
+            // Live search functionality
+            const searchInput = document.getElementById('search-input');
+            const tableBody = document.getElementById('table-body');
+            const systemRows = document.querySelectorAll('.system-row');
+            const noResultsRow = document.getElementById('no-results-row');
+            const clearButton = document.getElementById('clear-search');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    // Show/hide clear button
+                    if (searchTerm.length > 0) {
+                        clearButton.classList.remove('hidden');
+                    } else {
+                        clearButton.classList.add('hidden');
+                    }
+                    
+                    let hasResults = false;
+                    
+                    systemRows.forEach(row => {
+                        const systemName = row.getAttribute('data-name');
+                        if (systemName.includes(searchTerm)) {
+                            row.style.display = '';
+                            hasResults = true;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                    
+                    // Show/hide no results message
+                    if (noResultsRow) {
+                        if (!hasResults && systemRows.length > 0) {
+                            noResultsRow.style.display = '';
+                        } else {
+                            noResultsRow.style.display = 'none';
+                        }
+                    }
+                });
+
+                // Trigger input event on page load if there's a search value
+                if (searchInput.value) {
+                    searchInput.dispatchEvent(new Event('input'));
+                }
+            }
+        });
+
+        // Clear search function
+        function clearSearch() {
+            const searchInput = document.getElementById('search-input');
+            const clearButton = document.getElementById('clear-search');
+            
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+                searchInput.dispatchEvent(new Event('input'));
+            }
+            
+            if (clearButton) {
+                clearButton.classList.add('hidden');
+            }
+        }
+    </script>
 </x-app-layout>

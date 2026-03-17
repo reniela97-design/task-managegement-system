@@ -27,7 +27,21 @@
                         <div class="mb-6">
                             <x-input-label for="role_name" :value="__('Role Name')" class="text-blue-900 font-bold uppercase text-xs tracking-wider mb-2" />
                             <x-text-input id="role_name" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="role_name" :value="old('role_name', $role->role_name)" required />
-                            <x-input-error :messages="$errors->get('role_name')" class="mt-2" />
+                            
+                            <!-- Error message for empty field (R2.2) -->
+                            @error('role_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                            
+                            <!-- Success message for update (R2.3) -->
+                            @if(session('success'))
+                                <p class="text-green-500 text-xs mt-1 font-medium">✓ {{ session('success') }}</p>
+                            @endif
+                            
+                            <!-- Error message for duplicate role -->
+                            @if(session('error'))
+                                <p class="text-red-500 text-xs mt-1">{{ session('error') }}</p>
+                            @endif
                         </div>
 
                         <div class="flex items-center justify-end pt-6 border-t border-gray-100">
