@@ -11,7 +11,7 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
+
         <script>
     // This script runs INSTANTLY before the body loads
     if (localStorage.getItem('sidebarExpanded') === 'false') {
@@ -27,19 +27,19 @@
             ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
             ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
             [x-cloak] { display: none !important; }
-            
+
             /* Anti-jitter safety: forces width to match Tailwind's md:w-24 before Alpine loads */
-            html.sidebar-collapsed aside { width: 6rem !important; } 
+            html.sidebar-collapsed aside { width: 6rem !important; }
 
             /* resources/views/layouts/app.blade.php */
 
 /* 1. Force the sidebar width immediately */
-html.sidebar-collapsed aside { 
-    width: 6rem !important; 
+html.sidebar-collapsed aside {
+    width: 6rem !important;
 }
 
 /* 2. Hide all nav text spans immediately when collapsed */
-html.sidebar-collapsed aside span, 
+html.sidebar-collapsed aside span,
 html.sidebar-collapsed aside .ml-3 {
     display: none !important;
     opacity: 0 !important;
@@ -52,17 +52,17 @@ html.sidebar-collapsed aside .uppercase {
 }
         </style>
     </head>
-    <body class="font-sans antialiased bg-slate-50 text-slate-900 
-bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] 
+    <body class="font-sans antialiased bg-slate-50 text-slate-900
+bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))]
 from-slate-100 via-slate-50 to-blue-50/30">
 
-        <div x-data="{ 
+        <div x-data="{
         sidebarExpanded: localStorage.getItem('sidebarExpanded') === null ? true : localStorage.getItem('sidebarExpanded') === 'true',
         mobileOpen: false,
         toggleSidebar() {
             this.sidebarExpanded = !this.sidebarExpanded;
             localStorage.setItem('sidebarExpanded', this.sidebarExpanded);
-            
+
             // This ensures the CSS classes stay in sync with the state
             if (this.sidebarExpanded) {
                 document.documentElement.classList.remove('sidebar-collapsed');
@@ -72,8 +72,8 @@ from-slate-100 via-slate-50 to-blue-50/30">
         }
     }"
     class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
-            
-            <aside :class="sidebarExpanded ? 'md:w-72' : 'md:w-24'" 
+
+            <aside :class="sidebarExpanded ? 'md:w-72' : 'md:w-24'"
                    class="hidden md:flex flex-col flex-shrink-0 z-50 h-screen sticky top-0 transition-all duration-500 ease-in-out">
                 @include('layouts.navigation')
             </aside>
@@ -86,7 +86,7 @@ from-slate-100 via-slate-50 to-blue-50/30">
             </div>
 
             <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
-                
+
                 @isset($header)
                     <header class="sticky top-0 z-40 px-8 py-4 w-full">
                         <div class="bg-white/70 backdrop-blur-xl border border-white/50 shadow-sm rounded-2xl px-6 py-3 flex justify-between items-center">
@@ -113,5 +113,25 @@ from-slate-100 via-slate-50 to-blue-50/30">
                 </main>
             </div>
         </div>
+        <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const sidebar = document.getElementById("sidebarScroll");
+
+    if (!sidebar) return;
+
+    // Restore scroll
+    const savedScroll = localStorage.getItem("sidebarScroll");
+    if (savedScroll !== null) {
+        sidebar.scrollTop = savedScroll;
+    }
+
+    // Save scroll before leaving page
+    sidebar.addEventListener("scroll", function () {
+        localStorage.setItem("sidebarScroll", sidebar.scrollTop);
+    });
+
+});
+</script>
     </body>
 </html>
