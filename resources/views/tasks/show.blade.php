@@ -27,9 +27,9 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <a href="{{ route('tasks.index') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-5 rounded-xl shadow-sm transition uppercase tracking-wide text-xs flex items-center gap-2">
+                <a href="{{ route('gantt.index') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-5 rounded-xl shadow-sm transition uppercase tracking-wide text-xs flex items-center gap-2">
                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Back to List
+                    Back
                 </a>
                 
                 {{-- Edit Button logic: Admin/Manager OR the Assigned User can edit --}}

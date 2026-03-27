@@ -1,25 +1,34 @@
 <x-app-layout>
-    <div class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <h2 class="font-bold text-2xl text-blue-900 uppercase tracking-tight">
-                {{ __('Create Type') }}
-            </h2>
-        </div>
-    </div>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            Create Type
+        </h2>
+    </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-8">
-                <form method="POST" action="{{ route('types.store') }}" class="max-w-xl">
+        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <form method="POST" action="{{ route('types.store') }}">
                     @csrf
+                    
                     <div class="mb-4">
-                        <label for="type_name" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Type Name</label>
-                        <input type="text" name="type_name" id="type_name" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required autofocus>
-                        <x-input-error :messages="$errors->get('type_name')" class="mt-2" />
+                        <x-input-label for="type_name" :value="__('Type Name')" />
+                        <x-text-input id="type_name" class="block mt-1 w-full" type="text" name="type_name" value="{{ old('type_name') }}" required autofocus />
+                        
+                        <!-- Error message for empty field (T1.2) -->
+                        @error('type_name')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        
+                        <!-- Error message for duplicate type (T1.3) -->
+                        @if(session('error'))
+                            <p class="text-red-500 text-xs mt-1">{{ session('error') }}</p>
+                        @endif
                     </div>
-                    <div class="flex items-center gap-4">
-                        <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded shadow-md transition text-xs uppercase tracking-wide">Save</button>
-                        <a href="{{ route('types.index') }}" class="text-gray-500 hover:text-gray-700 font-bold text-xs uppercase">Cancel</a>
+
+                    <div class="flex items-center justify-end mt-4">
+                        <a href="{{ route('types.index') }}" class="text-gray-600 dark:text-gray-400 hover:underline mr-4">{{ __('Cancel') }}</a>
+                        <x-primary-button>{{ __('Save Type') }}</x-primary-button>
                     </div>
                 </form>
             </div>

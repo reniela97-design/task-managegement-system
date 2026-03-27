@@ -89,21 +89,46 @@ from-slate-100 via-slate-50 to-blue-50/30">
 
                 @isset($header)
                     <header class="sticky top-0 z-40 px-8 py-4 w-full">
-                        <div class="bg-white/70 backdrop-blur-xl border border-white/50 shadow-sm rounded-2xl px-6 py-3 flex justify-between items-center">
-                            <div class="flex items-center gap-4 md:hidden">
-                                <button @click="mobileOpen = true" class="text-slate-500 hover:text-slate-800">
-                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                                </button>
-                            </div>
-
-                            <div class="hidden md:flex items-center bg-slate-100/50 rounded-full px-4 py-2 border border-transparent focus-within:border-blue-300 focus-within:bg-white transition-all w-96">
-                                <svg class="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></path></svg>
-                                <input type="text" placeholder="Search tasks, projects..." class="bg-transparent border-none focus:ring-0 text-sm text-slate-700 placeholder-slate-400 w-full p-0">
-                            </div>
-
+                        <!-- Changed to white background with subtle border -->
+                        <div class="bg-white border border-gray-200 shadow-sm rounded-2xl px-6 py-3 flex justify-between items-center">
                             <div class="flex items-center gap-4">
-                                {{ $header }}
+                                <!-- Mobile menu button -->
+                                <div class="flex items-center gap-4 md:hidden">
+                                    <button @click="mobileOpen = true" class="text-slate-500 hover:text-slate-800">
+                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                    </button>
+                                </div>
+                                
+                                <!-- Header text on the left -->
+                                <div class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                    {{ $header }}
+                                </div>
                             </div>
+
+                            <!-- Conditionally show search bar - hide on ALL create/edit pages -->
+                            @php
+                                $hideSearch = request()->routeIs('categories.create') || 
+                                              request()->routeIs('categories.edit') ||
+                                              request()->routeIs('systems.create') || 
+                                              request()->routeIs('systems.edit') ||
+                                              request()->routeIs('types.create') || 
+                                              request()->routeIs('types.edit') ||
+                                              request()->routeIs('roles.create') || 
+                                              request()->routeIs('roles.edit');
+                            @endphp
+
+                            @if(!$hideSearch)
+                                <div class="hidden md:flex items-center bg-slate-100/50 rounded-full px-4 py-2 border border-transparent focus-within:border-blue-300 focus-within:bg-white transition-all w-96">
+                                    <svg class="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></path></svg>
+                                    <input type="text" placeholder="Search tasks, projects..." class="bg-transparent border-none focus:ring-0 text-sm text-slate-700 placeholder-slate-400 w-full p-0">
+                                </div>
+                            @else
+                                <!-- Empty div to maintain flex spacing when search is hidden -->
+                                <div class="hidden md:block w-96"></div>
+                            @endif
+
+                            <!-- Empty div for spacing (optional) -->
+                            <div></div>
                         </div>
                     </header>
                 @endisset

@@ -38,9 +38,19 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                                         </div>
-                                        <x-text-input id="role_name" class="block mt-1 w-full pl-10 rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="role_name" required autofocus placeholder="e.g. Compliance Officer" />
+                                        <x-text-input id="role_name" class="block mt-1 w-full pl-10 rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="role_name" value="{{ old('role_name') }}" required autofocus placeholder="e.g. Compliance Officer" />
                                     </div>
-                                    <x-input-error :messages="$errors->get('role_name')" class="mt-2" />
+                                    
+                                    <!-- Error message for empty field (R1.2) -->
+                                    @error('role_name')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                    
+                                    <!-- Error message for duplicate role (R1.3) -->
+                                    @if(session('error'))
+                                        <p class="text-red-500 text-xs mt-1">{{ session('error') }}</p>
+                                    @endif
+                                    
                                     <p class="text-xs text-gray-400 mt-2 italic">This name will be used throughout the system for permission checks.</p>
                                 </div>
 

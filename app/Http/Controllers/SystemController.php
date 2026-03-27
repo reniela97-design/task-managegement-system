@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 
 class SystemController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request): View
     {
         $query = System::where('system_inactive', false);
@@ -22,50 +25,92 @@ class SystemController extends Controller
         return view('systems.index', compact('systems'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create(): View
     {
         return view('systems.create');
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'system_name' => 'required|string|max:255',
         ]);
 
+        // Check for duplicate system name (S1.3 - System already in list)
+        $existingSystem = System::where('system_name', $request->system_name)
+            ->where('system_inactive', false)
+            ->first();
+        
+        if ($existingSystem) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'The System name is already in the list');
+        }
+
         System::create([
-            'system_name' => $validated['system_name'],
+            'system_name' => $request->system_name,
             'system_user_id' => Auth::id(),
             'system_inactive' => false,
         ]);
 
-        $this->logActivity('Created new system: ' . $validated['system_name']);
-
-        return redirect()->route('systems.index')->with('status', 'System created successfully!');
+        // S1.4 - Redirect to System List with success message
+        return redirect()->route('systems.index')
+            ->with('success', 'System created successfully!');
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(System $system): View
     {
         return view('systems.edit', compact('system'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, System $system): RedirectResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'system_name' => 'required|string|max:255',
         ]);
 
-        $system->update($validated);
-        $this->logActivity('Updated system: ' . $system->system_name);
+        // Check for duplicate system name (S2.3 - excluding current system)
+        $existingSystem = System::where('system_name', $request->system_name)
+            ->where('system_inactive', false)
+            ->where('system_id', '!=', $system->system_id)
+            ->first();
+        
+        if ($existingSystem) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'The System name is already in the list');
+        }
 
-        return redirect()->route('systems.index')->with('status', 'System updated successfully!');
+        $system->update([
+            'system_name' => $request->system_name
+        ]);
+
+        // S2.3 - Success message "UPDATE SUCCESSFULLY"
+        return redirect()->route('systems.index')
+            ->with('success', 'System updated successfully!');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(System $system): RedirectResponse
     {
         $system->update(['system_inactive' => true]);
-        $this->logActivity('Deleted system: ' . $system->system_name);
-
-        return redirect()->route('systems.index')->with('status', 'System deleted successfully!');
+        
+        // S3.2 - Success message after deletion
+        return redirect()->route('systems.index')
+            ->with('success', 'System deleted successfully!');
     }
 }

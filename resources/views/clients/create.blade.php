@@ -21,20 +21,41 @@
                     <form method="POST" action="{{ route('clients.store') }}">
                         @csrf
                         
+                        <!-- Client/Company Name Field - Required -->
                         <div class="mb-6">
                             <x-input-label for="client_name" :value="__('Client / Company Name')" class="text-blue-900 font-bold uppercase text-xs tracking-wider mb-2" />
-                            <x-text-input id="client_name" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="client_name" required autofocus placeholder="e.g. Acme Corp" />
+                            <x-text-input id="client_name" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="client_name" value="{{ old('client_name') }}" required autofocus placeholder="e.g. Acme Corp" />
+                            
+                            <!-- Error message for empty field -->
+                            @error('client_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                            
+                            <!-- Error message for duplicate client -->
+                            @if(session('duplicate_error'))
+                                <p class="text-red-500 text-xs mt-1">{{ session('duplicate_error') }}</p>
+                            @endif
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <!-- Contact Person Field - Required -->
                             <div>
                                 <x-input-label for="client_contact_person" :value="__('Contact Person')" class="text-blue-900 font-bold uppercase text-xs tracking-wider mb-2" />
-                                <x-text-input id="client_contact_person" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="client_contact_person" placeholder="e.g. John Doe" />
+                                <x-text-input id="client_contact_person" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="client_contact_person" value="{{ old('client_contact_person') }}" required placeholder="e.g. John Doe" />
+                                
+                                @error('client_contact_person')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
+                            <!-- Contact Number Field - Required -->
                             <div>
                                 <x-input-label for="client_contact_number" :value="__('Contact Number')" class="text-blue-900 font-bold uppercase text-xs tracking-wider mb-2" />
-                                <x-text-input id="client_contact_number" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="client_contact_number" placeholder="e.g. +1 234 567 890" />
+                                <x-text-input id="client_contact_number" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900" type="text" name="client_contact_number" value="{{ old('client_contact_number') }}" required placeholder="e.g. +1 234 567 890" />
+                                
+                                @error('client_contact_number')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
