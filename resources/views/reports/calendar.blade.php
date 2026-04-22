@@ -262,6 +262,14 @@
                     events: parsedEvents,
                     eventOrder: 'priority_sort',
                     
+                    eventDidMount: function(info) {
+                        if (info.event.extendedProps.type === 'task') {
+                            info.el.setAttribute('title', 'Assigned to: ' + info.event.extendedProps.assigned_to);
+                        } else if (info.event.extendedProps.type === 'note') {
+                            info.el.setAttribute('title', 'Private Note');
+                        }
+                    },
+
                     eventClick: function(info) {
                         info.jsEvent.preventDefault();
                         let alpine = Alpine.$data(document.getElementById('calendar-wrapper'));

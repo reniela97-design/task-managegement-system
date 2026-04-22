@@ -41,14 +41,31 @@ class TaskController extends Controller
             $query->where('task_assign_to', $user->user_id);
         }
 
-        $tasks = $query->latest('task_log_datetime')->paginate(20)->withQueryString();
+        $inProgressTasks = (clone $query)->where('task_status_id', 2)
+                                         ->latest('task_log_datetime')
+                                         ->paginate(5, ['*'], 'progress_page')
+                                         ->withQueryString();
+
+        $pendingTasks = (clone $query)->where('task_status_id', '!=', 2)
+                                      ->where('task_status_id', '!=', 3)
+                                      ->orderBy('task_priority_id', 'asc') 
+                                      ->latest('task_log_datetime')
+                                      ->paginate(5, ['*'], 'todo_page')
+                                      ->withQueryString();
+
+        $completedTasks = (clone $query)->where('task_status_id', 3)
+                                        ->latest('task_date_end')
+                                        ->paginate(5, ['*'], 'completed_page')
+                                        ->withQueryString();
+
+        $hasAnyTasks = $inProgressTasks->total() > 0 || $pendingTasks->total() > 0 || $completedTasks->total() > 0;
 
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
         $statuses = Status::where('status_inactive', false)->get();
         $users = User::where('user_inactive', false)->get();
 
-        return view('tasks.registry', compact('tasks', 'clients', 'projects', 'statuses', 'users', 'isAdminOrManager'));
+        return view('tasks.registry', compact('inProgressTasks', 'pendingTasks', 'completedTasks', 'hasAnyTasks', 'clients', 'projects', 'statuses', 'users', 'isAdminOrManager'));
     }
 
     /**
@@ -62,39 +79,105 @@ class TaskController extends Controller
         
         $filterMonth = $request->input('filter_month', ''); 
         $filterYear = $request->input('filter_year', '');   
+        $filterProject = $request->input('filter_project', ''); // NEW: Get project filter
+        
+        // 1. Specific Search Inputs
+        $searchTodo = $request->input('search_todo', '');
+        $searchProgress = $request->input('search_progress', '');
+        $searchCompleted = $request->input('search_completed', '');
 
+        // NEW: Fetch all active projects for the dropdown
+        $projects = Project::where('project_inactive', false)->get(); 
+
+        // 2. Base query for Unassigned Pool
         $unassignedQuery = Task::whereNull('task_assign_to')
                                ->where('task_inactive', false)
                                ->where('task_status_id', '!=', 3) 
                                ->latest('task_log_datetime');
+                               
+        // NEW: Apply project filter to unassigned
+        if (!empty($filterProject)) {
+            $unassignedQuery->where('task_project_id', $filterProject);
+        }
         
         $this->applyDateFilter($unassignedQuery, $filterMonth, $filterYear);
         $unassignedTasks = $unassignedQuery->get();
 
-        $query = Task::where('task_inactive', false)
-                     ->with(['project', 'client', 'status', 'assignee', 'priority', 'system', 'category', 'type']);
+        // 3. Base query for Assigned Tasks
+        $baseQuery = Task::where('task_inactive', false)
+                         ->with(['project', 'client', 'status', 'assignee', 'priority', 'system', 'category', 'type']);
 
         $viewingUser = null;
 
         if ($isAdminOrManager) {
             if ($request->has('user_id') && !empty($request->user_id)) {
-                $query->where('task_assign_to', $request->user_id);
+                $baseQuery->where('task_assign_to', $request->user_id);
                 $viewingUser = User::find($request->user_id);
             }
         } else {
-            $query->where('task_assign_to', $user->user_id);
+            $baseQuery->where('task_assign_to', $user->user_id);
         }
 
-        $this->applyDateFilter($query, $filterMonth, $filterYear);
-        $allAssigned = $query->orderByRaw("CASE WHEN task_status_id = 3 THEN task_log_datetime ELSE task_due_date END ASC")->get();
+        $this->applyDateFilter($baseQuery, $filterMonth, $filterYear);
 
-        $inProgressTasks = $allAssigned->where('task_status_id', 2);
-        $completedTasks  = $allAssigned->where('task_status_id', 3)->sortByDesc('task_date_end'); 
-        $pendingTasks    = $allAssigned->where('task_status_id', '!=', 2)->where('task_status_id', '!=', 3);
+        // NEW: Apply project filter to assigned queries
+        if (!empty($filterProject)) {
+            $baseQuery->where('task_project_id', $filterProject);
+        }
+
+        // 4. Fetch Unpaginated for Analytics/Charts (Stats stay accurate regardless of search)
+        $allAssigned = (clone $baseQuery)->orderByRaw("CASE WHEN task_status_id = 3 THEN task_log_datetime ELSE task_due_date END ASC")->get();
+
+        // 5. Fetch Paginated for Kanban Columns with Partial Match Filtering
+        $approvalTasks = (clone $baseQuery)->where('task_edit_pending', true)->get();
+
+        $cleanPending = (clone $baseQuery)->where('task_status_id', '!=', 2)
+            ->where('task_status_id', '!=', 3)
+            ->where('task_edit_pending', false)
+            ->when($searchTodo, function ($query, $searchTodo) {
+                $query->where(function($q) use ($searchTodo) {
+                    $q->where('task_title', 'like', "%{$searchTodo}%")
+                      ->orWhereHas('project', fn($pq) => $pq->where('project_name', 'like', "%{$searchTodo}%"));
+                });
+            })
+            ->orderBy('task_priority_id', 'asc')
+            ->latest('task_log_datetime')
+            ->paginate(5, ['*'], 'todo_page')
+            ->withQueryString();
+
+        $cleanInProgress = (clone $baseQuery)->where('task_status_id', 2)
+            ->where('task_edit_pending', false)
+            ->when($searchProgress, function ($query, $searchProgress) {
+                $query->where(function($q) use ($searchProgress) {
+                    $q->where('task_title', 'like', "%{$searchProgress}%")
+                      ->orWhereHas('project', fn($pq) => $pq->where('project_name', 'like', "%{$searchProgress}%"));
+                });
+            })
+            ->orderBy('task_priority_id', 'asc')
+            ->latest('task_log_datetime')
+            ->paginate(5, ['*'], 'progress_page')
+            ->withQueryString();
+
+        $cleanCompleted = (clone $baseQuery)->where('task_status_id', 3)
+            ->where('task_edit_pending', false)
+            ->when($searchCompleted, function ($query, $searchCompleted) {
+                $query->where(function($q) use ($searchCompleted) {
+                    $q->where('task_title', 'like', "%{$searchCompleted}%")
+                      ->orWhereHas('project', fn($pq) => $pq->where('project_name', 'like', "%{$searchCompleted}%"));
+                });
+            })
+            ->latest('task_date_end')
+            ->paginate(5, ['*'], 'completed_page')
+            ->withQueryString();
+
+        // 6. Analytics Variables Calculation
+        $inProgressTasksForStats = $allAssigned->where('task_status_id', 2);
+        $completedTasksForStats  = $allAssigned->where('task_status_id', 3); 
+        $pendingTasksForStats    = $allAssigned->where('task_status_id', '!=', 2)->where('task_status_id', '!=', 3);
 
         $totalTasks = $allAssigned->count();
-        $completedCount = $completedTasks->count();
-        $activeCount = $inProgressTasks->count() + $pendingTasks->count();
+        $completedCount = $completedTasksForStats->count();
+        $activeCount = $inProgressTasksForStats->count() + $pendingTasksForStats->count();
         
         $overdueCount = $allAssigned->where('task_status_id', '!=', 3)
                                     ->filter(function($task) {
@@ -106,7 +189,7 @@ class TaskController extends Controller
         $groupedCreated = $allAssigned->groupBy(function($item) {
             return Carbon::parse($item->task_log_datetime ?? now())->format('M d');
         });
-        $groupedCompleted = $completedTasks->groupBy(function($item) {
+        $groupedCompleted = $completedTasksForStats->groupBy(function($item) {
             return Carbon::parse($item->task_date_end ?? now())->format('M d');
         });
 
@@ -129,15 +212,15 @@ class TaskController extends Controller
         $chartLabels = json_encode($trendLabels);
         $chartCreated = json_encode($trendCreated);
         $chartCompleted = json_encode($trendCompleted);
-        $pieData = json_encode([$pendingTasks->count(), $inProgressTasks->count(), $completedCount]);
+        $pieData = json_encode([$pendingTasksForStats->count(), $inProgressTasksForStats->count(), $completedCount]);
         $barData = json_encode([$completedCount, $activeCount, $overdueCount]);
 
         $users = User::where('user_inactive', false)->get();
         $years = range(2023, now()->addYear()->year);
 
         return view('tasks.index', compact(
-            'inProgressTasks', 'completedTasks', 'pendingTasks', 'unassignedTasks', 
-            'users', 'viewingUser', 'filterMonth', 'filterYear', 'years',
+            'cleanPending', 'cleanInProgress', 'cleanCompleted', 'approvalTasks', 'unassignedTasks', 
+            'users', 'viewingUser', 'filterMonth', 'filterYear', 'filterProject', 'projects', 'years', 'searchTodo', 'searchProgress', 'searchCompleted',
             'totalTasks', 'completedCount', 'activeCount', 'overdueCount', 'completionRate',
             'chartLabels', 'chartCreated', 'chartCompleted', 'pieData', 'barData', 'isAdminOrManager'
         ));
@@ -234,6 +317,7 @@ class TaskController extends Controller
     public function edit(Task $task): View
     {
         if ($task->task_inactive) abort(404);
+        if ($task->task_status_id == 3) abort(403, 'Completed tasks cannot be edited.');
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -256,6 +340,8 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task): RedirectResponse
     {
+        if ($task->task_status_id == 3) abort(403, 'Completed tasks cannot be updated.');
+        
         /** @var \App\Models\User $user */
         $user = Auth::user();
         

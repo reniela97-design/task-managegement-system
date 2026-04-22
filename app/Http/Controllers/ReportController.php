@@ -123,12 +123,16 @@ class ReportController extends Controller
 
             $calendarEvents = [];
 
-            // 1. Task Creation / Start Marker
+            // Determine the date to place the task on (Due Date, fallback to Creation Date)
+            $eventDate = $task->task_due_date 
+                ? Carbon::parse($task->task_due_date)->format('Y-m-d') 
+                : Carbon::parse($task->task_log_datetime)->format('Y-m-d');
+
+            // 1. Task Due Marker
             $calendarEvents[] = [
-                'id' => 'task_created_' . $task->task_id,
-                'title' => ($isCompleted ? '✔ ' : '[NEW] ') . "[" . ($task->system->system_name ?? 'Gen') . "] " . $task->task_title,
-                'start' => Carbon::parse($task->task_log_datetime)->format('Y-m-d'), // Placed on creation date
-                // Note: 'end' is deliberately omitted so it does not span across dates
+                'id' => 'task_due_' . $task->task_id,
+                'title' => ($isCompleted ? '✔ ' : '[DUE] ') . "[" . ($task->system->system_name ?? 'Gen') . "] " . $task->task_title,
+                'start' => $eventDate, // Placed on due date instead of creation date
                 'url' => route('tasks.show', $task->task_id),
                 'backgroundColor' => $color,
                 'borderColor' => $color,

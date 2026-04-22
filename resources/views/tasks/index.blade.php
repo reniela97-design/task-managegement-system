@@ -5,13 +5,8 @@
     <style>
         [x-cloak] { display: none !important; }
         
-        /* Custom scrollbar for Kanban columns */
-        .kanban-col::-webkit-scrollbar { width: 6px; }
-        .kanban-col::-webkit-scrollbar-track { background: transparent; }
-        .kanban-col::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-        
-        /* Custom scrollbar for Modal Description */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        /* Custom scrollbar for Modal Description & Pagination Wrappers */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 8px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
@@ -57,7 +52,6 @@
                     if ($task->task_edit_pending && $task->task_pending_data) {
                         $newData = json_decode($task->task_pending_data, true);
                         
-                        // Clean labels (Removed 'ID')
                         $fields = [
                             'task_title' => 'Title', 
                             'task_description' => 'Description', 
@@ -78,7 +72,6 @@
                                 $displayVal = 'None/Cleared';
                                 
                                 if ($val !== null && $val !== '') {
-                                    // Fetch human-readable names instead of raw IDs
                                     switch ($key) {
                                         case 'task_status_id':
                                             $displayVal = \App\Models\Status::find($val)->status_name ?? 'Unknown';
@@ -139,16 +132,16 @@
             @endif
 
             {{-- Toolbar: Filters & Create --}}
-            <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 gap-4">
+            <div class="flex flex-col xl:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 gap-4">
                 
                 {{-- Left Side: Filters --}}
                 <div class="flex-1 w-full">
-                    <form method="GET" action="{{ route('tasks.index') }}" class="flex flex-wrap items-center gap-4">
-                        
+                    <form method="GET" action="{{ route('tasks.index') }}" class="flex flex-wrap items-center gap-4 w-full">
+
                         {{-- User Filter (Admins/Managers only) --}}
                         @if(auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Manager'))
                         <div class="flex items-center gap-2">
-                            <label class="text-xs font-bold text-gray-500 uppercase">Personnel:</label>
+                            <label class="text-xs font-bold text-gray-500 uppercase">User:</label>
                             <select name="user_id" onchange="this.form.submit()" class="text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-gray-50 py-1.5 pl-3 pr-8">
                                 <option value="">{{ $viewingUser->user_name ?? 'My Tasks (Default)' }}</option>
                                 <option disabled>──────────</option>
@@ -160,14 +153,27 @@
                         </div>
                         @endif
 
+                        {{-- NEW: Project Filter --}}
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Project:</label>
+                            <select name="filter_project" onchange="this.form.submit()" class="text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-gray-50 py-1.5 pl-3 pr-8 w-40 truncate">
+                                <option value="">All Projects</option>
+                                @foreach($projects as $project)
+                                    <option value="{{ $project->project_id }}" {{ $filterProject == $project->project_id ? 'selected' : '' }}>
+                                        {{ $project->project_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         {{-- Month Filter --}}
                         <div class="flex items-center gap-2">
                             <label class="text-xs font-bold text-gray-500 uppercase">Month:</label>
                             <select name="filter_month" onchange="this.form.submit()" class="text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-gray-50 py-1.5 pl-3 pr-8">
-                                <option value="">All Months</option>
+                                <option value="">All</option>
                                 @foreach(range(1, 12) as $m)
                                     <option value="{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}" {{ $filterMonth == str_pad($m, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
-                                        {{ \Carbon\Carbon::create()->month($m)->format('F') }}
+                                        {{ \Carbon\Carbon::create()->month($m)->format('M') }}
                                     </option>
                                 @endforeach
                             </select>
@@ -177,7 +183,7 @@
                         <div class="flex items-center gap-2">
                             <label class="text-xs font-bold text-gray-500 uppercase">Year:</label>
                             <select name="filter_year" onchange="this.form.submit()" class="text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-gray-50 py-1.5 pl-3 pr-8">
-                                <option value="">All Years</option>
+                                <option value="">All</option>
                                 @foreach($years as $y)
                                     <option value="{{ $y }}" {{ $filterYear == $y ? 'selected' : '' }}>{{ $y }}</option>
                                 @endforeach
@@ -187,7 +193,7 @@
                 </div>
                 
                 {{-- Right Side: Create Button --}}
-                <a href="{{ route('tasks.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition uppercase tracking-wide text-xs flex items-center gap-2 w-full md:w-auto justify-center">
+                <a href="{{ route('tasks.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition uppercase tracking-wide text-xs flex items-center gap-2 w-full xl:w-auto justify-center shrink-0 mt-2 xl:mt-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     New Task
                 </a>
@@ -262,19 +268,6 @@
                 </div>
             </div>
 
-            {{-- LOGIC: SEPARATE PENDING APPROVALS FROM KANBAN COLUMNS --}}
-            @php
-                $allTasks = collect()->concat($pendingTasks)->concat($inProgressTasks)->concat($completedTasks);
-                
-                // 1. Get ONLY the tasks pending approval
-                $approvalTasks = $allTasks->where('task_edit_pending', true);
-                
-                // 2. Get the clean columns (excluding pending approvals)
-                $cleanPending = $pendingTasks->where('task_edit_pending', false);
-                $cleanInProgress = $inProgressTasks->where('task_edit_pending', false);
-                $cleanCompleted = $completedTasks->where('task_edit_pending', false);
-            @endphp
-
             {{-- SEPARATED PENDING APPROVAL QUEUE --}}
             @if($approvalTasks->isNotEmpty())
             <div class="mb-8 bg-amber-50/80 border border-amber-200 rounded-2xl overflow-hidden shadow-sm">
@@ -286,16 +279,17 @@
                     <span class="bg-amber-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">{{ $approvalTasks->count() }} Review(s) Needed</span>
                 </div>
                 
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar bg-slate-50/30">
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/30">
                     @foreach ($approvalTasks as $task)
                         @php
                             $taskData = [
                                 'title' => $task->task_title, 'description' => $task->task_description ?? 'No description.',
-                                'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal', 'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
+                                'priority' => $task->task_priority_id == 1 ? 'High' : ($task->task_priority_id == 3 ? 'Low' : 'Normal'), 
+                                'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
                                 'project' => $task->project->project_name ?? 'General', 'client' => $task->client->client_name ?? 'Internal',
                                 'assignee' => $task->assignee->user_name ?? 'Unassigned', 'status_id' => $task->task_status_id,
                                 'is_pending_approval' => (bool)$task->task_edit_pending,
-                                'pending_changes' => getPendingChanges($task), // Pass new diff data here
+                                'pending_changes' => getPendingChanges($task),
                                 'edit_url' => route('tasks.edit', $task->task_id)
                             ];
                         @endphp
@@ -305,7 +299,9 @@
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $task->project->project_name ?? 'General' }}</span>
                                 @if($task->task_priority_id == 1)
-                                    <span class="bg-red-50 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-100 uppercase">Emergency</span>
+                                    <span class="bg-red-50 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-100 uppercase">High</span>
+                                @elseif($task->task_priority_id == 3)
+                                    <span class="bg-emerald-50 text-emerald-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-100 uppercase">Low</span>
                                 @endif
                             </div>
                             <h4 class="font-bold text-gray-800 text-sm mb-4 leading-tight flex-grow">{{ $task->task_title }}</h4>
@@ -342,31 +338,45 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                 
                 {{-- COLUMN 1: PENDING (To Do) --}}
-                <div class="bg-slate-50/80 border border-slate-200 rounded-2xl flex flex-col max-h-[75vh]">
-                    <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-white rounded-t-2xl shadow-sm z-10">
-                        <h3 class="font-black text-slate-700 uppercase tracking-wide text-sm flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> To Do
-                        </h3>
-                        <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">{{ $cleanPending->count() }}</span>
+                <div class="bg-slate-50/80 border border-slate-200 rounded-2xl flex flex-col h-full shadow-sm">
+                    <div class="p-4 border-b border-slate-200 bg-white rounded-t-2xl z-10 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-black text-slate-700 uppercase tracking-wide text-sm flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> To Do
+                            </h3>
+                            <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">{{ $cleanPending->total() }}</span>
+                        </div>
+                        <form method="GET" action="{{ route('tasks.index') }}" class="relative">
+                            @foreach(request()->except(['search_todo', 'todo_page']) as $key => $value)
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" name="search_todo" value="{{ request('search_todo') }}" placeholder="Search To Do... (Press Enter)" class="text-xs border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 pl-8 py-1.5 w-full bg-slate-50 placeholder-slate-400">
+                        </form>
                     </div>
-                    <div class="p-3 overflow-y-auto kanban-col flex-1 space-y-3">
+                    <div class="p-3 flex-1 space-y-3">
                         @forelse($cleanPending as $task)
                             @php
                                 $taskData = [
                                     'title' => $task->task_title, 'description' => $task->task_description ?? 'No description.',
-                                    'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal', 'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
+                                    'priority' => $task->task_priority_id == 1 ? 'High' : ($task->task_priority_id == 3 ? 'Low' : 'Normal'), 
+                                    'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
                                     'project' => $task->project->project_name ?? 'General', 'client' => $task->client->client_name ?? 'Internal',
                                     'assignee' => $task->assignee->user_name ?? 'Unassigned', 'status_id' => $task->task_status_id,
                                     'is_pending_approval' => false,
-                                    'pending_changes' => getPendingChanges($task), // Pass new diff data here
+                                    'pending_changes' => getPendingChanges($task),
                                     'edit_url' => route('tasks.edit', $task->task_id)
                                 ];
                             @endphp
-                            <div class="bg-white border {{ $task->task_priority_id == 1 ? 'border-red-200 border-l-4 border-l-red-500' : 'border-slate-200 border-l-4 border-l-blue-500' }} rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer group" @click="modalData = {{ json_encode($taskData) }}; showModal = true;">
+                            <div class="bg-white border {{ $task->task_priority_id == 1 ? 'border-red-200 border-l-4 border-l-red-500' : ($task->task_priority_id == 3 ? 'border-emerald-200 border-l-4 border-l-emerald-500' : 'border-slate-200 border-l-4 border-l-blue-500') }} rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer group" @click="modalData = {{ json_encode($taskData) }}; showModal = true;">
                                 <div class="flex justify-between items-start mb-2">
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $task->project->project_name ?? 'General' }}</span>
                                     @if($task->task_priority_id == 1)
-                                        <span class="bg-red-50 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-100 uppercase">Emergency</span>
+                                        <span class="bg-red-50 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-100 uppercase">High</span>
+                                    @elseif($task->task_priority_id == 3)
+                                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-100 uppercase">Low</span>
                                     @endif
                                 </div>
                                 <h4 class="font-bold text-slate-800 text-sm mb-3 leading-tight group-hover:text-blue-600 transition">{{ $task->task_title }}</h4>
@@ -389,34 +399,53 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="text-center py-10 text-slate-400 text-xs font-medium">No pending tasks.</div>
+                            <div class="text-center py-10 text-slate-400 text-xs font-medium">No pending tasks found.</div>
                         @endforelse
                     </div>
+                    @if($cleanPending->hasPages())
+                        <div class="p-3 border-t border-slate-200 bg-white rounded-b-2xl overflow-x-auto custom-scrollbar">
+                            <div class="min-w-max">
+                                {{ $cleanPending->links() }}
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- COLUMN 2: IN PROGRESS --}}
-                <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl flex flex-col max-h-[75vh]">
-                    <div class="p-4 border-b border-indigo-100 flex justify-between items-center bg-white rounded-t-2xl shadow-sm z-10 relative overflow-hidden">
+                <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl flex flex-col h-full shadow-sm">
+                    <div class="p-4 border-b border-indigo-100 bg-white rounded-t-2xl z-10 relative overflow-hidden space-y-3">
                         <div class="absolute inset-0 bg-indigo-50 opacity-50" style="background-image: linear-gradient(45deg, #e0e7ff 25%, transparent 25%, transparent 50%, #e0e7ff 50%, #e0e7ff 75%, transparent 75%, transparent); background-size: 10px 10px;"></div>
-                        <h3 class="font-black text-indigo-900 uppercase tracking-wide text-sm flex items-center gap-2 relative z-10">
-                            <span class="relative flex h-2.5 w-2.5">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
-                            </span>
-                            In Progress
-                        </h3>
-                        <span class="bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1 rounded-full relative z-10">{{ $cleanInProgress->count() }}</span>
+                        <div class="flex justify-between items-center relative z-10">
+                            <h3 class="font-black text-indigo-900 uppercase tracking-wide text-sm flex items-center gap-2">
+                                <span class="relative flex h-2.5 w-2.5">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                                </span>
+                                In Progress
+                            </h3>
+                            <span class="bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1 rounded-full relative z-10">{{ $cleanInProgress->total() }}</span>
+                        </div>
+                        <form method="GET" action="{{ route('tasks.index') }}" class="relative z-10">
+                            @foreach(request()->except(['search_progress', 'progress_page']) as $key => $value)
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <svg class="h-3.5 w-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" name="search_progress" value="{{ request('search_progress') }}" placeholder="Search Progress... (Press Enter)" class="text-xs border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring-indigo-500 pl-8 py-1.5 w-full bg-white/80 backdrop-blur-sm placeholder-indigo-300">
+                        </form>
                     </div>
-                    <div class="p-3 overflow-y-auto kanban-col flex-1 space-y-3">
+                    <div class="p-3 flex-1 space-y-3">
                         @forelse($cleanInProgress as $task)
                             @php
                                 $taskData = [
                                     'title' => $task->task_title, 'description' => $task->task_description ?? 'No description.',
-                                    'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal', 'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
+                                    'priority' => $task->task_priority_id == 1 ? 'High' : ($task->task_priority_id == 3 ? 'Low' : 'Normal'), 
+                                    'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
                                     'project' => $task->project->project_name ?? 'General', 'client' => $task->client->client_name ?? 'Internal',
                                     'assignee' => $task->assignee->user_name ?? 'Unassigned', 'status_id' => $task->task_status_id,
                                     'is_pending_approval' => false,
-                                    'pending_changes' => getPendingChanges($task), // Pass new diff data here
+                                    'pending_changes' => getPendingChanges($task),
                                     'edit_url' => route('tasks.edit', $task->task_id)
                                 ];
                             @endphp
@@ -425,7 +454,6 @@
                                 <div class="flex justify-between items-start mb-2">
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400">{{ $task->project->project_name ?? 'General' }}</span>
                                     <div class="flex items-center gap-2">
-                                        {{-- Edit Button --}}
                                         <a href="{{ route('tasks.edit', $task->task_id) }}" @click.stop class="text-indigo-400 hover:text-indigo-700 transition" title="Edit Task">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         </a>
@@ -443,29 +471,48 @@
                                 </button>
                             </div>
                         @empty
-                            <div class="text-center py-10 text-indigo-300 text-xs font-medium">Nothing in progress.</div>
+                            <div class="text-center py-10 text-indigo-300 text-xs font-medium">Nothing currently in progress.</div>
                         @endforelse
                     </div>
+                    @if($cleanInProgress->hasPages())
+                        <div class="p-3 border-t border-indigo-100 bg-white rounded-b-2xl overflow-x-auto custom-scrollbar">
+                            <div class="min-w-max">
+                                {{ $cleanInProgress->links() }}
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- COLUMN 3: COMPLETED --}}
-                <div class="bg-emerald-50/30 border border-emerald-100 rounded-2xl flex flex-col max-h-[75vh]">
-                    <div class="p-4 border-b border-emerald-100 flex justify-between items-center bg-white rounded-t-2xl shadow-sm z-10">
-                        <h3 class="font-black text-emerald-800 uppercase tracking-wide text-sm flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Done
-                        </h3>
-                        <span class="bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold px-2.5 py-1 rounded-full">{{ $cleanCompleted->count() }}</span>
+                <div class="bg-emerald-50/30 border border-emerald-100 rounded-2xl flex flex-col h-full shadow-sm">
+                    <div class="p-4 border-b border-emerald-100 bg-white rounded-t-2xl z-10 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-black text-emerald-800 uppercase tracking-wide text-sm flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Done
+                            </h3>
+                            <span class="bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold px-2.5 py-1 rounded-full">{{ $cleanCompleted->total() }}</span>
+                        </div>
+                        <form method="GET" action="{{ route('tasks.index') }}" class="relative">
+                            @foreach(request()->except(['search_completed', 'completed_page']) as $key => $value)
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <svg class="h-3.5 w-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" name="search_completed" value="{{ request('search_completed') }}" placeholder="Search Completed... (Press Enter)" class="text-xs border-emerald-100 rounded-lg focus:border-emerald-500 focus:ring-emerald-500 pl-8 py-1.5 w-full bg-emerald-50/50 placeholder-emerald-400">
+                        </form>
                     </div>
-                    <div class="p-3 overflow-y-auto kanban-col flex-1 space-y-3">
+                    <div class="p-3 flex-1 space-y-3">
                         @forelse($cleanCompleted as $task)
                             @php
                                 $taskData = [
                                     'title' => $task->task_title, 'description' => $task->task_description ?? 'No description.',
-                                    'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal', 'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
+                                    'priority' => $task->task_priority_id == 1 ? 'High' : ($task->task_priority_id == 3 ? 'Low' : 'Normal'), 
+                                    'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
                                     'project' => $task->project->project_name ?? 'General', 'client' => $task->client->client_name ?? 'Internal',
                                     'assignee' => $task->assignee->user_name ?? 'Unassigned', 'status_id' => $task->task_status_id,
                                     'is_pending_approval' => false,
-                                    'pending_changes' => getPendingChanges($task), // Pass new diff data here
+                                    'pending_changes' => getPendingChanges($task),
                                     'edit_url' => route('tasks.edit', $task->task_id)
                                 ];
                             @endphp
@@ -481,15 +528,18 @@
                                         </div>
                                     </div>
                                 </div>
-                                {{-- Edit Button --}}
-                                <a href="{{ route('tasks.edit', $task->task_id) }}" @click.stop class="text-slate-300 hover:text-indigo-600 transition flex-shrink-0 p-1" title="Edit Task">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                </a>
                             </div>
                         @empty
-                            <div class="text-center py-10 text-emerald-400 text-xs font-medium">No completed tasks in this period.</div>
+                            <div class="text-center py-10 text-emerald-400 text-xs font-medium">No completed tasks found.</div>
                         @endforelse
                     </div>
+                    @if($cleanCompleted->hasPages())
+                        <div class="p-3 border-t border-emerald-100 bg-white rounded-b-2xl overflow-x-auto custom-scrollbar">
+                            <div class="min-w-max">
+                                {{ $cleanCompleted->links() }}
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
             </div>
@@ -509,20 +559,25 @@
                         @php
                             $taskData = [
                                 'title' => $task->task_title, 'description' => $task->task_description ?? 'No description.',
-                                'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal', 'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
+                                'priority' => $task->task_priority_id == 1 ? 'High' : ($task->task_priority_id == 3 ? 'Low' : 'Normal'), 
+                                'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
                                 'project' => $task->project->project_name ?? 'General', 'client' => $task->client->client_name ?? 'Internal',
                                 'assignee' => 'Unassigned', 'status_id' => $task->task_status_id,
                                 'is_pending_approval' => false,
-                                'pending_changes' => getPendingChanges($task), // Pass new diff data here
+                                'pending_changes' => getPendingChanges($task),
                                 'edit_url' => route('tasks.edit', $task->task_id)
                             ];
                         @endphp
                         <div class="bg-white p-4 rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition relative group flex flex-col h-full cursor-pointer"
                              @click="modalData = {{ json_encode($taskData) }}; showModal = true;">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded border {{ $task->task_priority_id == 1 ? 'bg-red-50 text-red-700 border-red-100' : 'bg-blue-50 text-blue-700 border-blue-100' }}">
-                                    {{ $task->task_priority_id == 1 ? 'Emergency' : 'Normal' }}
-                                </span>
+                                @if($task->task_priority_id == 1)
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded border bg-red-50 text-red-700 border-red-100">High</span>
+                                @elseif($task->task_priority_id == 3)
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded border bg-emerald-50 text-emerald-700 border-emerald-100">Low</span>
+                                @else
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded border bg-blue-50 text-blue-700 border-blue-100">Normal</span>
+                                @endif
                             </div>
                             <h4 class="font-bold text-gray-800 text-sm mb-2 leading-tight">{{ $task->task_title }}</h4>
                             
@@ -567,16 +622,25 @@
                          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                          class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-gray-200 flex flex-col max-h-[90vh]">
                         
+                        {{-- Modal Header with Dynamic Colors for High/Normal/Low --}}
                         <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100 bg-gray-50/50">
                             <div class="flex items-center gap-3">
-                                <div class="p-2 rounded-lg shadow-sm" :class="modalData.priority === 'Emergency' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
+                                <div class="p-2 rounded-lg shadow-sm" :class="{
+                                    'bg-red-100 text-red-600': modalData.priority === 'High' || modalData.priority === 'Emergency',
+                                    'bg-emerald-100 text-emerald-600': modalData.priority === 'Low',
+                                    'bg-blue-100 text-blue-600': modalData.priority === 'Normal' || (!['High', 'Emergency', 'Low'].includes(modalData.priority))
+                                }">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                                 </div>
                                 <h3 class="text-lg font-black text-gray-800 uppercase tracking-wide">Task Information</h3>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="px-3 py-1 text-[10px] font-bold uppercase rounded-full border shadow-sm"
-                                      :class="modalData.priority === 'Emergency' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'"
+                                      :class="{
+                                          'bg-red-50 text-red-700 border-red-200': modalData.priority === 'High' || modalData.priority === 'Emergency',
+                                          'bg-emerald-50 text-emerald-700 border-emerald-200': modalData.priority === 'Low',
+                                          'bg-blue-50 text-blue-700 border-blue-200': modalData.priority === 'Normal' || (!['High', 'Emergency', 'Low'].includes(modalData.priority))
+                                      }"
                                       x-text="modalData.priority">
                                 </span>
                                 <button @click="showModal = false" class="text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition rounded-full p-1.5 focus:outline-none">
@@ -666,7 +730,7 @@
                         </div>
 
                         <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100 rounded-b-2xl">
-                            <a :href="modalData.edit_url" class="inline-flex justify-center items-center gap-1.5 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm border border-indigo-700 hover:bg-indigo-700 transition-all w-auto">
+                            <a x-show="modalData.status_id != 3" :href="modalData.edit_url" class="inline-flex justify-center items-center gap-1.5 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm border border-indigo-700 hover:bg-indigo-700 transition-all w-auto">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 Edit Task
                             </a>
@@ -741,7 +805,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             
-            // Safely fetch data from DOM to prevent VS Code Errors
             const dataStorage = document.getElementById('chart-data-storage');
             const chartLabels = JSON.parse(dataStorage.getAttribute('data-labels') || '[]');
             const chartCreated = JSON.parse(dataStorage.getAttribute('data-created') || '[]');

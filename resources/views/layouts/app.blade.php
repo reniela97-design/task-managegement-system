@@ -13,11 +13,12 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <script>
-    // This script runs INSTANTLY before the body loads
-    if (localStorage.getItem('sidebarExpanded') === 'false') {
-        document.documentElement.classList.add('sidebar-collapsed');
-    }
-</script>
+            // This script runs INSTANTLY before the body loads to prevent flickering.
+            // By defaulting to !== 'true', it ensures the sidebar starts collapsed on a fresh visit.
+            if (localStorage.getItem('sidebarExpanded') !== 'true') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        </script>
 
         <style>
             /* Smooth scrolling and custom scrollbar */
@@ -31,47 +32,44 @@
             /* Anti-jitter safety: forces width to match Tailwind's md:w-24 before Alpine loads */
             html.sidebar-collapsed aside { width: 6rem !important; }
 
-            /* resources/views/layouts/app.blade.php */
+            /* 1. Force the sidebar width immediately */
+            html.sidebar-collapsed aside {
+                width: 6rem !important;
+            }
 
-/* 1. Force the sidebar width immediately */
-html.sidebar-collapsed aside {
-    width: 6rem !important;
-}
+            /* 2. Hide all nav text spans immediately when collapsed */
+            html.sidebar-collapsed aside span,
+            html.sidebar-collapsed aside .ml-3 {
+                display: none !important;
+                opacity: 0 !important;
+            }
 
-/* 2. Hide all nav text spans immediately when collapsed */
-html.sidebar-collapsed aside span,
-html.sidebar-collapsed aside .ml-3 {
-    display: none !important;
-    opacity: 0 !important;
-}
-
-/* 3. Hide the logo and menu headers immediately */
-html.sidebar-collapsed aside img,
-html.sidebar-collapsed aside .uppercase {
-    display: none !important;
-}
+            /* 3. Hide the logo and menu headers immediately */
+            html.sidebar-collapsed aside img,
+            html.sidebar-collapsed aside .uppercase {
+                display: none !important;
+            }
         </style>
     </head>
-    <body class="font-sans antialiased bg-slate-50 text-slate-900
-bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))]
-from-slate-100 via-slate-50 to-blue-50/30">
+    <body class="font-sans antialiased bg-slate-50 text-slate-900 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-100 via-slate-50 to-blue-50/30">
 
         <div x-data="{
-        sidebarExpanded: localStorage.getItem('sidebarExpanded') === null ? true : localStorage.getItem('sidebarExpanded') === 'true',
-        mobileOpen: false,
-        toggleSidebar() {
-            this.sidebarExpanded = !this.sidebarExpanded;
-            localStorage.setItem('sidebarExpanded', this.sidebarExpanded);
+            // Default to FALSE (collapsed) if localStorage is null (first visit)
+            sidebarExpanded: localStorage.getItem('sidebarExpanded') === null ? false : localStorage.getItem('sidebarExpanded') === 'true',
+            mobileOpen: false,
+            toggleSidebar() {
+                this.sidebarExpanded = !this.sidebarExpanded;
+                localStorage.setItem('sidebarExpanded', this.sidebarExpanded);
 
-            // This ensures the CSS classes stay in sync with the state
-            if (this.sidebarExpanded) {
-                document.documentElement.classList.remove('sidebar-collapsed');
-            } else {
-                document.documentElement.classList.add('sidebar-collapsed');
+                // This ensures the CSS classes stay in sync with the state
+                if (this.sidebarExpanded) {
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
             }
-        }
-    }"
-    class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
+        }"
+        class="min-h-screen flex flex-col md:flex-row overflow-hidden relative">
 
             <aside :class="sidebarExpanded ? 'md:w-72' : 'md:w-24'"
                    class="hidden md:flex flex-col flex-shrink-0 z-50 h-screen sticky top-0 transition-all duration-500 ease-in-out">
@@ -89,23 +87,19 @@ from-slate-100 via-slate-50 to-blue-50/30">
 
                 @isset($header)
                     <header class="sticky top-0 z-40 px-8 py-4 w-full">
-                        <!-- Changed to white background with subtle border -->
                         <div class="bg-white border border-gray-200 shadow-sm rounded-2xl px-6 py-3 flex justify-between items-center">
                             <div class="flex items-center gap-4">
-                                <!-- Mobile menu button -->
                                 <div class="flex items-center gap-4 md:hidden">
                                     <button @click="mobileOpen = true" class="text-slate-500 hover:text-slate-800">
                                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                                     </button>
                                 </div>
                                 
-                                <!-- Header text on the left -->
                                 <div class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                                     {{ $header }}
                                 </div>
                             </div>
 
-                            <!-- Conditionally show search bar - hide on ALL create/edit pages -->
                             @php
                                 $hideSearch = request()->routeIs('categories.create') || 
                                               request()->routeIs('categories.edit') ||
@@ -123,11 +117,9 @@ from-slate-100 via-slate-50 to-blue-50/30">
                                     <input type="text" placeholder="Search tasks, projects..." class="bg-transparent border-none focus:ring-0 text-sm text-slate-700 placeholder-slate-400 w-full p-0">
                                 </div>
                             @else
-                                <!-- Empty div to maintain flex spacing when search is hidden -->
                                 <div class="hidden md:block w-96"></div>
                             @endif
 
-                            <!-- Empty div for spacing (optional) -->
                             <div></div>
                         </div>
                     </header>
@@ -138,25 +130,23 @@ from-slate-100 via-slate-50 to-blue-50/30">
                 </main>
             </div>
         </div>
+        
         <script>
-document.addEventListener("DOMContentLoaded", function () {
+            document.addEventListener("DOMContentLoaded", function () {
+                const sidebar = document.getElementById("sidebarScroll");
+                if (!sidebar) return;
 
-    const sidebar = document.getElementById("sidebarScroll");
+                // Restore scroll
+                const savedScroll = localStorage.getItem("sidebarScroll");
+                if (savedScroll !== null) {
+                    sidebar.scrollTop = savedScroll;
+                }
 
-    if (!sidebar) return;
-
-    // Restore scroll
-    const savedScroll = localStorage.getItem("sidebarScroll");
-    if (savedScroll !== null) {
-        sidebar.scrollTop = savedScroll;
-    }
-
-    // Save scroll before leaving page
-    sidebar.addEventListener("scroll", function () {
-        localStorage.setItem("sidebarScroll", sidebar.scrollTop);
-    });
-
-});
-</script>
+                // Save scroll before leaving page
+                sidebar.addEventListener("scroll", function () {
+                    localStorage.setItem("sidebarScroll", sidebar.scrollTop);
+                });
+            });
+        </script>
     </body>
 </html>

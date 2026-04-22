@@ -108,7 +108,7 @@
             @endif
 
             {{-- EMPTY STATE (If absolutely no tasks match the filter) --}}
-            @if($tasks->isEmpty())
+            @if(!$hasAnyTasks)
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 px-6 py-16 text-center text-gray-400 font-medium">
                     <svg class="w-16 h-16 mx-auto text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
                     <p class="text-lg">No tasks found matching your criteria.</p>
@@ -116,7 +116,6 @@
             @else
 
                 {{-- 1. IN PROGRESS SECTION --}}
-                @php $inProgressTasks = $tasks->filter(fn($t) => $t->task_status_id == 2); @endphp
                 @if($inProgressTasks->isNotEmpty())
                 <div class="bg-white overflow-hidden shadow-lg rounded-2xl border border-indigo-200 mb-8 relative">
                     <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
@@ -128,14 +127,14 @@
                             </span>
                             Active / In Progress
                         </h3>
-                        <span class="bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $inProgressTasks->count() }} Tasks</span>
+                        <span class="bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $inProgressTasks->total() }} Tasks</span>
                     </div>
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="bg-slate-50/50 border-b border-indigo-50 text-[10px] uppercase tracking-widest text-indigo-400 font-bold">
                                     <th class="px-6 py-4 pl-8">Task Title</th>
-                                    <th class="px-6 py-4">Context</th>
+                                    <th class="px-6 py-4">Due Date</th>
                                     <th class="px-6 py-4">Assignment</th>
                                     <th class="px-6 py-4">Priority</th>
                                     <th class="px-6 py-4">Started On</th>
@@ -149,11 +148,15 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($inProgressTasks->hasPages())
+                        <div class="px-6 py-3 bg-indigo-50/30 border-t border-indigo-100">
+                            {{ $inProgressTasks->links() }}
+                        </div>
+                    @endif
                 </div>
                 @endif
 
                 {{-- 2. PENDING SECTION --}}
-                @php $pendingTasks = $tasks->filter(fn($t) => $t->task_status_id != 2 && $t->task_status_id != 3); @endphp
                 @if($pendingTasks->isNotEmpty())
                 <div class="bg-white overflow-hidden shadow-lg rounded-2xl border border-blue-200 mb-8 relative">
                     <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
@@ -162,17 +165,17 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                             Pending / To Do
                         </h3>
-                        <span class="bg-blue-200 text-blue-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $pendingTasks->count() }} Tasks</span>
+                        <span class="bg-blue-200 text-blue-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $pendingTasks->total() }} Tasks</span>
                     </div>
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="bg-slate-50/50 border-b border-blue-50 text-[10px] uppercase tracking-widest text-blue-400 font-bold">
                                     <th class="px-6 py-4 pl-8">Task Title</th>
-                                    <th class="px-6 py-4">Context</th>
+                                    <th class="px-6 py-4">Due Date</th>
                                     <th class="px-6 py-4">Assignment</th>
                                     <th class="px-6 py-4">Priority</th>
-                                    <th class="px-6 py-4">Target Due</th>
+                                    <th class="px-6 py-4">Project</th>
                                     <th class="px-6 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -183,11 +186,15 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($pendingTasks->hasPages())
+                        <div class="px-6 py-3 bg-blue-50/30 border-t border-blue-100">
+                            {{ $pendingTasks->links() }}
+                        </div>
+                    @endif
                 </div>
                 @endif
 
                 {{-- 3. COMPLETED SECTION --}}
-                @php $completedTasks = $tasks->filter(fn($t) => $t->task_status_id == 3); @endphp
                 @if($completedTasks->isNotEmpty())
                 <div class="bg-white overflow-hidden shadow-lg rounded-2xl border border-emerald-200 mb-4 relative">
                     <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
@@ -196,14 +203,14 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                             Completed / Done
                         </h3>
-                        <span class="bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $completedTasks->count() }} Tasks</span>
+                        <span class="bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $completedTasks->total() }} Tasks</span>
                     </div>
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="bg-slate-50/50 border-b border-emerald-50 text-[10px] uppercase tracking-widest text-emerald-500 font-bold">
                                     <th class="px-6 py-4 pl-8">Task Title</th>
-                                    <th class="px-6 py-4">Context</th>
+                                    <th class="px-6 py-4">Due Date</th>
                                     <th class="px-6 py-4">Completed By</th>
                                     <th class="px-6 py-4">Priority</th>
                                     <th class="px-6 py-4">Finished On</th>
@@ -217,16 +224,14 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($completedTasks->hasPages())
+                        <div class="px-6 py-3 bg-emerald-50/30 border-t border-emerald-100">
+                            {{ $completedTasks->links() }}
+                        </div>
+                    @endif
                 </div>
                 @endif
 
-            @endif
-
-            {{-- Pagination Links --}}
-            @if($tasks->hasPages())
-            <div class="px-6 py-4 bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
-                {{ $tasks->links() }}
-            </div>
             @endif
 
         </div>
@@ -252,14 +257,14 @@
                         {{-- Modal Header --}}
                         <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100 bg-gray-50/50">
                             <div class="flex items-center gap-3">
-                                <div class="p-2 rounded-lg shadow-sm" :class="modalData.priority === 'Emergency' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
+                                <div class="p-2 rounded-lg shadow-sm" :class="modalData.priority === 'High' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                                 </div>
                                 <h3 class="text-lg font-black text-gray-800 uppercase tracking-wide">Task Information</h3>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="px-3 py-1 text-[10px] font-bold uppercase rounded-full border shadow-sm"
-                                      :class="modalData.priority === 'Emergency' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'"
+                                      :class="modalData.priority === 'High' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'"
                                       x-text="modalData.priority">
                                 </span>
                                 <button @click="showModal = false" class="text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition rounded-full p-1.5 focus:outline-none">

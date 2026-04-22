@@ -73,7 +73,6 @@ class DashboardController extends Controller
         $completionPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
 
         // --- 3. CALENDAR EVENTS ---
-        // Fetch all relevant tasks instead of just those with due dates
         $calendarTasks = (clone $query)->get();
 
         $events = $calendarTasks->flatMap(function ($task) {
@@ -90,11 +89,13 @@ class DashboardController extends Controller
 
             $calendarEvents = [];
 
-            // 1. Task Creation / Start Marker
+            // 1. Task Marker (Uses Due Date primarily, falls back to Log Date if no Due Date exists)
+            $targetDate = $task->task_due_date ?? $task->task_log_datetime;
+
             $calendarEvents[] = [
-                'id' => 'task_created_' . $task->task_id,
-                'title' => ($isCompleted ? '✔ ' : '[NEW] ') . $task->task_title,
-                'start' => Carbon::parse($task->task_log_datetime)->format('Y-m-d'),
+                'id' => 'task_event_' . $task->task_id,
+                'title' => ($isCompleted ? '✔ ' : '') . $task->task_title, // Removed [NEW] to make it cleaner
+                'start' => Carbon::parse($targetDate)->format('Y-m-d'),
                 'allDay' => true,
                 'url' => route('tasks.show', $task->task_id),
                 'backgroundColor' => $color,
@@ -143,4 +144,4 @@ class DashboardController extends Controller
             'notifications'
         ));
     }
-}   
+}

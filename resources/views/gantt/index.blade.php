@@ -4,224 +4,254 @@
 
     <style>
         /* BASE GRID & TYPOGRAPHY */
-        .gantt .grid-header { fill: #f8fafc; stroke: #f1f5f9; }
-        .gantt .grid-row { fill: #ffffff; stroke: #f8fafc; }
-        .gantt .grid-row:hover { fill: #f8fafc; }
-        .gantt .tick text { fill: #94a3b8; font-family: 'Figtree', sans-serif; font-size: 11px; font-weight: 700; }
-        .gantt .bar-label { font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 12px; fill: #ffffff; }
+        .gantt .grid-header { fill: #ffffff; stroke: #e2e8f0; }
+        .gantt .grid-row { fill: #ffffff; stroke: #f1f5f9; }
+        .gantt .grid-row:nth-child(even) { fill: #f8fafc; }
+        .gantt .tick text { fill: #64748b; font-family: 'Figtree', sans-serif; font-size: 10px; }
+        
+        /* BAR STYLING */
+        .gantt .bar-label { font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 12px; fill: #334155; }
+        .gantt .bar-wrapper { cursor: pointer; }
+        
+        /* Theme Colors */
+        .theme-blue.project-summary-bar .bar { fill: #60a5fa; fill-opacity: 0.5; stroke: #3b82f6; stroke-width: 1; }
+        .theme-blue.task-bar .bar { fill: #eff6ff; stroke: #3b82f6; stroke-width: 1; }
+        .theme-blue .bar-progress { fill: #3b82f6; }
 
-        /* THEMED PILL BARS */
-        .project-header-row .bar { fill: #800000; cursor: pointer; transition: fill 0.2s; } 
-        .project-header-row .bar:hover { fill: #600000; }
-        
-        .task-normal .bar { fill: #000080; cursor: pointer; transition: fill 0.2s; } 
-        .task-normal .bar:hover { fill: #000066; }
-        .task-normal .bar-progress { fill: rgba(255, 255, 255, 0.2); } /* Subtle progress overlay */
-        
-        .task-emergency .bar { fill: #ef4444; }
-        .task-emergency .bar-progress { fill: rgba(255, 255, 255, 0.2); }
-        
-        .task-completed .bar { fill: #10b981; }
+        .theme-green.project-summary-bar .bar { fill: #4ade80; fill-opacity: 0.5; stroke: #22c55e; stroke-width: 1; }
+        .theme-green.task-bar .bar { fill: #f0fdf4; stroke: #22c55e; stroke-width: 1; }
+        .theme-green .bar-progress { fill: #22c55e; }
 
-        /* ACTION BUTTONS (SVG Overlays) */
-        .gantt-action-btn { cursor: pointer; outline: none; }
-        .gantt-action-btn circle { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); stroke: #ffffff; stroke-width: 2; }
-        .gantt-action-btn:hover circle { transform: scale(1.1); }
-        .btn-project circle { fill: #4a0000; } /* Darker Maroon for button */
-        .btn-task circle { fill: #ffffff; }   /* White button for tasks */
-        .btn-task path { fill: #000080; }     /* Blue icon inside white button */
+        .theme-purple.project-summary-bar .bar { fill: #c084fc; fill-opacity: 0.5; stroke: #a855f7; stroke-width: 1; }
+        .theme-purple.task-bar .bar { fill: #faf5ff; stroke: #a855f7; stroke-width: 1; }
+        .theme-purple .bar-progress { fill: #a855f7; }
 
-        /* PREMIUM KANBAN-STYLE POPUP */
-        .gantt-container .popup-wrapper {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.05);
-            padding: 20px;
-            min-width: 280px;
-            font-family: 'Figtree', sans-serif;
-            border: none;
-            transform: translateY(-5px);
-        }
-        
-        .pop-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .pop-badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge-emergency { background: #fee2e2; color: #991b1b; }
-        .badge-normal { background: #f1f5f9; color: #000080; }
-        
-        .pop-id { font-size: 11px; font-weight: 800; color: #94a3b8; }
-        .pop-title { font-weight: 900; color: #1e293b; font-size: 16px; line-height: 1.3; margin-bottom: 16px; }
-        
-        .pop-assignee { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; }
-        .pop-avatar { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
-        .pop-name { font-size: 13px; color: #334155; font-weight: 700; }
+        .theme-orange.project-summary-bar .bar { fill: #fb923c; fill-opacity: 0.5; stroke: #f97316; stroke-width: 1; }
+        .theme-orange.task-bar .bar { fill: #fff7ed; stroke: #f97316; stroke-width: 1; }
+        .theme-orange .bar-progress { fill: #f97316; }
 
-        .pop-progress-container { margin-top: 10px; }
-        .pop-progress-bar { width: 100%; height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
-        .pop-progress-fill { height: 100%; background: #000080; border-radius: 99px; }
-        .pop-progress-text { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #64748b; }
+        .theme-teal.project-summary-bar .bar { fill: #2dd4bf; fill-opacity: 0.5; stroke: #14b8a6; stroke-width: 1; }
+        .theme-teal.task-bar .bar { fill: #f0fdfa; stroke: #14b8a6; stroke-width: 1; }
+        .theme-teal .bar-progress { fill: #14b8a6; }
+
+        /* Label overrides */
+        .task-bar .bar-label { fill: #1e293b; font-weight: 500; }
+        .project-summary-bar .bar-label { fill: #0f172a; font-weight: 800; }
+
+        /* COMPLETED TASKS STYLING (Locked) */
+        .completed-task .bar { fill-opacity: 0.6; stroke-dasharray: 4, 4; }
+        .completed-task .bar-wrapper { cursor: not-allowed !important; }
+        .completed-task .bar-label { fill: #64748b; font-style: italic; }
+        .completed-task .handle-group { display: none !important; } /* Removes drag handles */
+        
+        /* Popup base overrides to make Tailwind play nice with Frappe Gantt */
+        .gantt .popup-wrapper { padding: 0 !important; }
     </style>
 
     <div id="gantt-data-storage" class="hidden" data-tasks="{{ json_encode($ganttTasks) }}"></div>
 
-    <div class="py-8 px-4 sm:px-6 lg:px-8 max-w-[100%] mx-auto">
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-[100%] mx-auto">
+        
+        {{-- Filters & Controls Area --}}
+        <div class="bg-white rounded-t-xl border border-gray-200 p-4 flex flex-col xl:flex-row justify-between items-end gap-4 shadow-sm relative z-10">
             
-            {{-- Header Toolbar --}}
-            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
+            {{-- Filter Form --}}
+            <form method="GET" action="{{ route('gantt.index') }}" class="flex flex-wrap items-end gap-3 w-full xl:w-auto">
                 <div>
-                    <h2 class="font-black text-2xl uppercase tracking-tight text-gray-900">Timeline Matrix</h2>
-                    <p class="text-xs font-bold text-gray-400 mt-1">Interactive Project Roadmap</p>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Project</label>
+                    <select name="project_id" class="border-gray-300 rounded-md text-sm py-1.5 focus:ring-blue-500 focus:border-blue-500 min-w-[150px]">
+                        <option value="">All Projects</option>
+                        @foreach($projects as $p)
+                            <option value="{{ $p->project_id }}" {{ request('project_id') == $p->project_id ? 'selected' : '' }}>
+                                {{ $p->project_name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
-                    <button onclick="toggleAll(true)" class="px-4 py-2 text-[10px] font-black text-blue-800 hover:bg-white hover:shadow-sm rounded-lg transition-all">EXPAND ALL</button>
-                    <button onclick="toggleAll(false)" class="px-4 py-2 text-[10px] font-black text-maroon-800 hover:bg-white hover:shadow-sm rounded-lg transition-all" style="color: #800000;">COLLAPSE ALL</button>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Month</label>
+                    <select name="filter_month" class="border-gray-300 rounded-md text-sm py-1.5 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
+                        <option value="">All</option>
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" {{ request('filter_month') == $m ? 'selected' : '' }}>
+                                {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Year</label>
+                    <select name="filter_year" class="border-gray-300 rounded-md text-sm py-1.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All</option>
+                        @for($y = date('Y') - 1; $y <= date('Y') + 3; $y++)
+                            <option value="{{ $y }}" {{ request('filter_year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm font-semibold transition-colors">Apply Filter</button>
+                    @if(request()->has('project_id') || request()->has('filter_year') || request()->has('filter_month'))
+                        <a href="{{ route('gantt.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors">Clear</a>
+                    @endif
+                </div>
+            </form>
+
+            {{-- Right Side Controls --}}
+            <div class="flex flex-col sm:flex-row items-end sm:items-center gap-4">
+                {{-- Expand / Collapse All Buttons --}}
+                <div class="flex gap-4 px-1">
+                    <button type="button" onclick="toggleAll(true)" class="text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg> Expand All
+                    </button>
+                    <button type="button" onclick="toggleAll(false)" class="text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg> Collapse All
+                    </button>
+                </div>
+
+                {{-- View Mode Toggles --}}
+                <div class="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
+                    <button onclick="changeViewMode('Quarter Day')" class="view-btn px-3 py-1 text-xs font-bold rounded-md text-gray-500 hover:text-gray-900" data-mode="Quarter Day">Hours</button>
+                    <button onclick="changeViewMode('Day')" class="view-btn px-3 py-1 text-xs font-bold rounded-md bg-white text-blue-600 shadow-sm" data-mode="Day">Days</button>
+                    <button onclick="changeViewMode('Week')" class="view-btn px-3 py-1 text-xs font-bold rounded-md text-gray-500 hover:text-gray-900" data-mode="Week">Weeks</button>
+                    <button onclick="changeViewMode('Month')" class="view-btn px-3 py-1 text-xs font-bold rounded-md text-gray-500 hover:text-gray-900" data-mode="Month">Months</button>
                 </div>
             </div>
+        </div>
 
-            {{-- Gantt Container --}}
-            <div class="overflow-x-auto min-h-[600px] p-4 bg-gray-50/30">
+        {{-- Gantt Chart Container --}}
+        <div class="bg-white rounded-b-xl shadow-sm border border-t-0 border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto min-h-[500px]">
                 <svg id="gantt"></svg>
             </div>
         </div>
     </div>
 
     <script>
-        let openProjects = new Set();
+        let ganttChart;
+        let currentViewMode = 'Day';
+        
         const rawTasks = JSON.parse(document.getElementById('gantt-data-storage').getAttribute('data-tasks') || '[]');
+        let openProjects = new Set(rawTasks.filter(t => t.is_project).map(t => t.project_id));
 
         function renderGantt() {
             const filteredTasks = rawTasks.filter(t => t.is_project || openProjects.has(t.project_id))
                 .map(t => {
-                    // Clean names for display
-                    if (t.is_project) return { ...t, name: t.name.replace(/[▶▼]\s*/, '') };
-                    return { ...t, name: t.name.replace('↳ ', '') };
+                    if (t.is_project) {
+                        const icon = openProjects.has(t.project_id) ? '▼' : '▶';
+                        return { ...t, name: `${icon} ${t.name.replace(/[▶▼]\s*/, '')}` };
+                    }
+                    return t;
                 });
 
-            new Gantt("#gantt", filteredTasks, {
-                header_height: 60,
-                column_width: 35,
-                view_mode: 'Month',
-                bar_height: 38,
-                bar_corner_radius: 19, // Fully rounded pill shape
+            const ganttContainer = document.getElementById('gantt');
+
+            if (filteredTasks.length === 0) {
+                ganttContainer.innerHTML = '<text x="20" y="40" font-family="sans-serif" font-size="14" fill="#64748b">No tasks match your filters.</text>';
+                return;
+            }
+
+            ganttContainer.innerHTML = ''; 
+
+            ganttChart = new Gantt("#gantt", filteredTasks, {
+                header_height: 50,
+                column_width: currentViewMode === 'Day' ? 30 : (currentViewMode === 'Month' ? 120 : 60),
+                step: 24,
+                view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
+                bar_height: 24,
+                bar_corner_radius: 3,
+                arrow_curve: 0,
+                padding: 18,
+                view_mode: currentViewMode,
+                date_format: 'YYYY-MM-DD',
+                
+                // Tailwind Styled Popups
                 custom_popup_html: function(task) {
+                    const cleanName = task.name.replace(/[▶▼🔒]\s*/g, '');
+                    
                     if (task.is_project) {
                         return `
-                            <div class="p-2">
-                                <div class="text-[10px] font-black text-gray-400 mb-1">PROJECT DIR.</div>
-                                <div class="text-sm font-black" style="color: #800000;">${task.name}</div>
+                            <div class="bg-white p-4 rounded-lg shadow-xl border border-slate-200 min-w-[200px] z-50">
+                                <div class="font-bold text-slate-800 text-sm mb-1">${cleanName}</div>
+                                <div class="text-xs text-slate-500 mb-2">${task.start} — ${task.end}</div>
+                                <div class="text-xs font-bold text-blue-600">Total Progress: ${task.progress}%</div>
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="bg-white p-4 rounded-lg shadow-xl border border-slate-200 min-w-[250px] z-50">
+                                <div class="font-bold text-slate-800 text-sm mb-2 pb-2 border-b border-slate-100">${cleanName}</div>
+                                <div class="grid grid-cols-2 gap-y-2 text-xs">
+                                    <div class="text-slate-500 font-semibold">Start:</div>
+                                    <div class="font-medium text-slate-800 text-right">${task.start}</div>
+                                    
+                                    <div class="text-slate-500 font-semibold">End:</div>
+                                    <div class="font-medium text-slate-800 text-right">${task.end}</div>
+                                    
+                                    <div class="text-slate-500 font-semibold">Status:</div>
+                                    <div class="font-medium text-slate-800 text-right">${task.status_name}</div>
+                                    
+                                    <div class="text-slate-500 font-semibold">Priority:</div>
+                                    <div class="font-medium text-slate-800 text-right">${task.priority_name}</div>
+                                    
+                                    <div class="text-slate-500 font-semibold">Assignee:</div>
+                                    <div class="font-medium text-slate-800 text-right">${task.assignee_name}</div>
+                                </div>
                             </div>
                         `;
                     }
-
-                    const initial = task.assignee_name ? task.assignee_name.charAt(0).toUpperCase() : '?';
-                    const isEmergency = task.priority_name.toLowerCase() === 'emergency';
-                    const badgeClass = isEmergency ? 'badge-emergency' : 'badge-normal';
-                    
-                    // Visual Progress Bar Color
-                    let progressColor = '#000080';
-                    if (task.status_name.toLowerCase().includes('completed')) progressColor = '#10b981';
-                    if (isEmergency) progressColor = '#ef4444';
-
-                    return `
-                        <div>
-                            <div class="pop-header">
-                                <span class="pop-badge ${badgeClass}">${task.priority_name}</span>
-                                <span class="pop-id">#${task.id.split('_')[1]}</span>
-                            </div>
-                            
-                            <div class="pop-title">${task.name}</div>
-                            
-                            <div class="pop-assignee">
-                                <div class="pop-avatar">${initial}</div>
-                                <div class="pop-name">${task.assignee_name}</div>
-                            </div>
-                            
-                            <div class="pop-progress-container">
-                                <div class="pop-progress-bar">
-                                    <div class="pop-progress-fill" style="width: ${task.progress}%; background-color: ${progressColor};"></div>
-                                </div>
-                                <div class="pop-progress-text">
-                                    <span style="color: ${progressColor};">${task.status_name}</span>
-                                    <span>${task.progress}%</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
                 },
+                
                 on_click: function(task) {
-                    if (task.is_project) toggleProject(task.project_id);
-                    else window.location.href = task.url;
+                    if (task.is_project) {
+                        toggleProject(task.project_id);
+                    } else {
+                        if (task.is_completed) {
+                            alert("This task is already completed and cannot be edited.");
+                            return; 
+                        }
+                        window.location.href = task.url; 
+                    }
                 }
             });
-
-            injectCircularButtons();
-        }
-
-        function injectCircularButtons() {
+            
+            // Adjust label positions after render
             setTimeout(() => {
-                const bars = document.querySelectorAll('.bar-wrapper');
-                bars.forEach(group => {
-                    const id = group.getAttribute('data-id');
-                    const task = rawTasks.find(t => t.id === id);
-                    if (!task) return;
-
-                    const bar = group.querySelector('.bar');
-                    const x = parseFloat(bar.getAttribute('x'));
-                    const y = parseFloat(bar.getAttribute('y'));
-                    const w = parseFloat(bar.getAttribute('width'));
-                    const h = parseFloat(bar.getAttribute('height'));
-
-                    // Create Action Button Group
-                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    g.setAttribute("class", task.is_project ? "gantt-action-btn btn-project" : "gantt-action-btn btn-task");
-                    
-                    // Overlap the button on the right edge of the pill
-                    const radius = 14;
-                    g.setAttribute("transform", `translate(${x + w - radius - 4}, ${y + (h/2)})`);
-                    
-                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute("r", radius);
-
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute("stroke-width", "2.5");
-                    path.setAttribute("stroke-linecap", "round");
-                    path.setAttribute("stroke-linejoin", "round");
-                    path.setAttribute("fill", "none");
-                    
-                    if (task.is_project) {
-                        // Project Dropdown Icon (+ / -)
-                        path.setAttribute("stroke", "#ffffff");
-                        const isOpen = openProjects.has(task.project_id);
-                        path.setAttribute("d", isOpen ? "M-4 0 L4 0" : "M-4 0 L4 0 M0 -4 L0 4");
-                        g.onclick = (e) => { e.stopPropagation(); toggleProject(task.project_id); };
-                    } else {
-                        // Task Navigation Arrow (->)
-                        path.setAttribute("stroke", "#000080");
-                        if (task.priority_name.toLowerCase() === 'emergency') path.setAttribute("stroke", "#ef4444");
-                        
-                        path.setAttribute("d", "M-3 -4 L2 0 L-3 4"); 
-                        path.setAttribute("transform", "translate(1, 0)"); // visual center adjustment
-                        g.onclick = (e) => { e.stopPropagation(); window.location.href = task.url; };
-                    }
-
-                    g.appendChild(circle);
-                    g.appendChild(path);
-                    group.appendChild(g);
+                document.querySelectorAll('.bar-label').forEach(label => {
+                    label.setAttribute('x', parseFloat(label.getAttribute('x')) + 10);
                 });
             }, 50);
         }
 
         function toggleProject(pid) {
-            if (openProjects.has(pid)) openProjects.delete(pid);
-            else openProjects.add(pid);
+            if (openProjects.has(pid)) {
+                openProjects.delete(pid);
+            } else {
+                openProjects.add(pid);
+            }
             renderGantt();
         }
 
         function toggleAll(expand) {
-            if (expand) rawTasks.forEach(t => t.is_project && openProjects.add(t.project_id));
-            else openProjects.clear();
-            renderGantt();
+            if (expand) {
+                rawTasks.forEach(t => { if (t.is_project) openProjects.add(t.project_id); });
+            } else {
+                openProjects.clear();
+            }
+            renderGantt(); 
+        }
+
+        function changeViewMode(mode) {
+            currentViewMode = mode;
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                if(btn.dataset.mode === mode) {
+                    btn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            if (ganttChart) renderGantt(); 
         }
 
         if (rawTasks.length > 0) renderGantt();

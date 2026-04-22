@@ -1,8 +1,15 @@
 @php
+    $priorityText = 'Normal';
+    if ($task->task_priority_id == 1) {
+        $priorityText = 'High';
+    } elseif ($task->task_priority_id == 3) {
+        $priorityText = 'Low';
+    }
+
     $taskData = [
         'title' => $task->task_title,
         'description' => $task->task_description ?? 'No description.',
-        'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal',
+        'priority' => $priorityText,
         'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
         'project' => $task->project->project_name ?? 'General',
         'client' => $task->client->client_name ?? 'Internal',
@@ -20,18 +27,12 @@
         </a>
     </td>
 
-    {{-- 2. Context --}}
+    {{-- 2. Due Date --}}
     <td class="px-6 py-4">
-        <div class="flex flex-col gap-1">
-            <span class="inline-flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                {{ $task->client->client_name ?? 'Internal' }}
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-[10px] text-gray-400 uppercase tracking-wide font-bold">
-                <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                {{ $task->project->project_name ?? 'General Workspace' }}
-            </span>
-        </div>
+        <span class="text-xs font-bold flex items-center gap-1.5 {{ $task->task_due_date && \Carbon\Carbon::parse($task->task_due_date)->isPast() && $task->task_status_id != 3 ? 'text-red-600' : 'text-gray-600' }}">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            {{ $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date Set' }}
+        </span>
     </td>
 
     {{-- 3. Assignment --}}
@@ -48,20 +49,24 @@
         @endif
     </td>
 
-    {{-- 4. Priority --}}
+    {{-- 4. Priority Badges (High, Normal, Low) --}}
     <td class="px-6 py-4">
         @if($task->task_priority_id == 1)
             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 uppercase tracking-widest">
-                🔥 Emergency
+                🔥 High
+            </span>
+        @elseif($task->task_priority_id == 3)
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase tracking-widest">
+                🔽 Low
             </span>
         @else
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200 uppercase tracking-widest">
-                Normal
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-widest">
+                ⏺ Normal
             </span>
         @endif
     </td>
 
-    {{-- 5. Timeline --}}
+    {{-- 5. Timeline / Dynamic --}}
     <td class="px-6 py-4">
         @if($task->task_status_id == 3)
             <span class="text-[10px] uppercase tracking-wider font-bold text-emerald-600 flex items-center gap-1">
@@ -74,9 +79,9 @@
                 Started {{ $task->task_date_start ? \Carbon\Carbon::parse($task->task_date_start)->format('M d') : '' }}
             </span>
         @else
-            <span class="text-[10px] uppercase tracking-wider font-bold flex items-center gap-1 {{ $task->task_due_date && \Carbon\Carbon::parse($task->task_due_date)->isPast() ? 'text-red-500' : 'text-blue-500' }}">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                {{ $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date' }}
+            <span class="inline-flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-wide font-bold">
+                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                {{ $task->project->project_name ?? 'General Workspace' }}
             </span>
         @endif
     </td>
@@ -84,10 +89,18 @@
     {{-- 6. Actions --}}
     <td class="px-6 py-4 text-center">
         <div class="flex items-center justify-center gap-3">
+            
+            {{-- VIEW BUTTON --}}
+            <a href="{{ route('tasks.show', $task->task_id) }}" class="text-gray-400 hover:text-indigo-600 transition" title="View Full Details" @click.stop>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </a>
+
+            {{-- EDIT & DELETE BUTTONS --}}
             @if(auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Manager'))
                 <a href="{{ route('tasks.edit', $task->task_id) }}" class="text-gray-400 hover:text-blue-600 transition" title="Edit Task" @click.stop>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 </a>
+                
                 <form action="{{ route('tasks.destroy', $task->task_id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this task?');" @click.stop>
                     @csrf @method('DELETE')
                     <button type="submit" class="text-gray-400 hover:text-red-600 transition" title="Delete Task">

@@ -184,7 +184,7 @@
                         <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
                     <div class="p-6">
-                        <div class="text-red-200 text-xs font-bold uppercase tracking-widest">Emergency Priority</div>
+                        <div class="text-red-200 text-xs font-bold uppercase tracking-widest">High Priority</div>
                         <div class="text-5xl font-black text-white mt-1">{{ $highPriorityCount }}</div>
                         <div class="mt-4"><span class="text-red-200 text-xs">Requires Immediate Attention</span></div>
                     </div>
@@ -283,7 +283,7 @@
                                         $taskData = [
                                             'title' => $task->task_title, 
                                             'description' => $task->task_description ?? 'No description.',
-                                            'priority' => $task->task_priority_id == 1 ? 'Emergency' : 'Normal', 
+                                            'priority' => $task->task_priority_id == 1 ? 'High' : 'Normal', 
                                             'due' => $task->task_due_date ? \Carbon\Carbon::parse($task->task_due_date)->format('M d, Y') : 'No Date',
                                             'project' => $task->project->project_name ?? 'General', 
                                             'client' => $task->client->client_name ?? 'Internal',
@@ -300,7 +300,7 @@
                                         <td class="px-6 py-4">
                                             <span class="px-2 py-1 rounded text-[10px] font-bold border tracking-widest uppercase
                                                 {{ $task->task_priority_id == 1 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200' }}">
-                                                {{ $task->task_priority_id == 1 ? 'Emergency' : 'Normal' }}
+                                                {{ $task->task_priority_id == 1 ? 'High' : 'Normal' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 text-xs font-bold text-gray-600">
@@ -341,14 +341,14 @@
                         
                         <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100 bg-gray-50/50">
                             <div class="flex items-center gap-3">
-                                <div class="p-2 rounded-lg shadow-sm" :class="modalData.priority === 'Emergency' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
+                                <div class="p-2 rounded-lg shadow-sm" :class="modalData.priority === 'High' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                                 </div>
                                 <h3 class="text-lg font-black text-gray-800 uppercase tracking-wide">Task Information</h3>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="px-3 py-1 text-[10px] font-bold uppercase rounded-full border shadow-sm"
-                                      :class="modalData.priority === 'Emergency' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'"
+                                      :class="modalData.priority === 'High' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'"
                                       x-text="modalData.priority">
                                 </span>
                                 <button @click="showModal = false" class="text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition rounded-full p-1.5 focus:outline-none">
@@ -510,6 +510,7 @@
                         right: 'next'
                     },
                     height: 300,
+                    dayMaxEvents: 1, // Added to prevent stretching
                     events: eventsData,
                     eventOrder: 'priority_sort',
                     displayEventTime: false,
@@ -535,5 +536,6 @@
         #mini-calendar .fc-daygrid-day-number { font-size: 0.75rem; padding: 2px; color: #475569; }
         #mini-calendar .fc-event { font-size: 0.65rem; padding: 1px 2px; border-radius: 2px; }
         #mini-calendar .fc-day-today { background-color: #eff6ff !important; }
+        #mini-calendar .fc-more-link { font-size: 0.65rem; font-weight: bold; color: #1e3a8a; } /* Added styling for "+X more" text */
     </style>
 </x-app-layout>
