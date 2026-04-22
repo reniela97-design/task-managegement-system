@@ -153,7 +153,7 @@
                         </div>
                         @endif
 
-                        {{-- NEW: Project Filter --}}
+                        {{-- Project Filter --}}
                         <div class="flex items-center gap-2">
                             <label class="text-xs font-bold text-gray-500 uppercase">Project:</label>
                             <select name="filter_project" onchange="this.form.submit()" class="text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-gray-50 py-1.5 pl-3 pr-8 w-40 truncate">
@@ -402,10 +402,89 @@
                             <div class="text-center py-10 text-slate-400 text-xs font-medium">No pending tasks found.</div>
                         @endforelse
                     </div>
+
+                    {{-- CUSTOM PAGINATOR FOR TO DO --}}
                     @if($cleanPending->hasPages())
-                        <div class="p-3 border-t border-slate-200 bg-white rounded-b-2xl overflow-x-auto custom-scrollbar">
-                            <div class="min-w-max">
-                                {{ $cleanPending->links() }}
+                        <div class="p-4 border-t border-slate-200 bg-white rounded-b-2xl">
+                            @php
+                                $paginator = $cleanPending;
+                                $start = max(1, $paginator->currentPage() - 1);
+                                $end = min($paginator->lastPage(), $paginator->currentPage() + 1);
+                                if ($paginator->currentPage() == 1) $end = min($paginator->lastPage(), 3);
+                                if ($paginator->currentPage() == $paginator->lastPage()) $start = max(1, $paginator->lastPage() - 2);
+                            @endphp
+                            <div class="flex flex-col items-center justify-center gap-3 w-full">
+                                <p class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-widest m-0 text-center">
+                                    Showing {{ $paginator->firstItem() }} to {{ $paginator->lastItem() }} of {{ $paginator->total() }}
+                                </p>
+                                
+                                <div class="flex items-center justify-center gap-1">
+                                    {{-- First Page --}}
+                                    @if ($paginator->onFirstPage())
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+                                        </span>
+                                    @else
+                                        <a href="{{ $paginator->url(1) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="First Page">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+                                        </a>
+                                    @endif
+
+                                    {{-- Prev --}}
+                                    @if ($paginator->onFirstPage())
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </span>
+                                    @else
+                                        <a href="{{ $paginator->previousPageUrl() }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Previous">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </a>
+                                    @endif
+
+                                    {{-- Numbers --}}
+                                    @for ($i = $start; $i <= $end; $i++)
+                                        @if ($i == $paginator->currentPage())
+                                            <span class="flex items-center justify-center w-7 h-7 rounded border border-blue-500 bg-blue-50 text-blue-600 font-bold text-[10px] shadow-sm">{{ $i }}</span>
+                                        @else
+                                            <a href="{{ $paginator->url($i) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 font-bold text-[10px] transition shadow-sm">{{ $i }}</a>
+                                        @endif
+                                    @endfor
+
+                                    {{-- Next --}}
+                                    @if ($paginator->hasMorePages())
+                                        <a href="{{ $paginator->nextPageUrl() }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Next">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                    @else
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </span>
+                                    @endif
+
+                                    {{-- Last Page --}}
+                                    @if ($paginator->hasMorePages())
+                                        <a href="{{ $paginator->url($paginator->lastPage()) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Last Page">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+                                        </a>
+                                    @else
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- QUICK JUMP DROPDOWN --}}
+                                <div class="flex items-center justify-center gap-2 mt-1">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Jump:</span>
+                                    <select onchange="window.location.href=this.value" class="h-7 py-0 pl-2 pr-6 text-[10px] font-bold text-slate-600 bg-slate-50 border-slate-200 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+                                        @for ($p = 1; $p <= $paginator->lastPage(); $p++)
+                                            <option value="{{ $paginator->url($p) }}" {{ $p == $paginator->currentPage() ? 'selected' : '' }}>
+                                                Page {{ $p }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
+
                             </div>
                         </div>
                     @endif
@@ -474,10 +553,89 @@
                             <div class="text-center py-10 text-indigo-300 text-xs font-medium">Nothing currently in progress.</div>
                         @endforelse
                     </div>
+
+                    {{-- CUSTOM PAGINATOR FOR IN PROGRESS --}}
                     @if($cleanInProgress->hasPages())
-                        <div class="p-3 border-t border-indigo-100 bg-white rounded-b-2xl overflow-x-auto custom-scrollbar">
-                            <div class="min-w-max">
-                                {{ $cleanInProgress->links() }}
+                        <div class="p-4 border-t border-indigo-100 bg-white rounded-b-2xl">
+                            @php
+                                $paginator = $cleanInProgress;
+                                $start = max(1, $paginator->currentPage() - 1);
+                                $end = min($paginator->lastPage(), $paginator->currentPage() + 1);
+                                if ($paginator->currentPage() == 1) $end = min($paginator->lastPage(), 3);
+                                if ($paginator->currentPage() == $paginator->lastPage()) $start = max(1, $paginator->lastPage() - 2);
+                            @endphp
+                            <div class="flex flex-col items-center justify-center gap-3 w-full">
+                                <p class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-widest m-0 text-center">
+                                    Showing {{ $paginator->firstItem() }} to {{ $paginator->lastItem() }} of {{ $paginator->total() }}
+                                </p>
+                                
+                                <div class="flex items-center justify-center gap-1">
+                                    {{-- First Page --}}
+                                    @if ($paginator->onFirstPage())
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+                                        </span>
+                                    @else
+                                        <a href="{{ $paginator->url(1) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="First Page">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+                                        </a>
+                                    @endif
+
+                                    {{-- Prev --}}
+                                    @if ($paginator->onFirstPage())
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </span>
+                                    @else
+                                        <a href="{{ $paginator->previousPageUrl() }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Previous">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </a>
+                                    @endif
+
+                                    {{-- Numbers --}}
+                                    @for ($i = $start; $i <= $end; $i++)
+                                        @if ($i == $paginator->currentPage())
+                                            <span class="flex items-center justify-center w-7 h-7 rounded border border-indigo-500 bg-indigo-50 text-indigo-600 font-bold text-[10px] shadow-sm">{{ $i }}</span>
+                                        @else
+                                            <a href="{{ $paginator->url($i) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 font-bold text-[10px] transition shadow-sm">{{ $i }}</a>
+                                        @endif
+                                    @endfor
+
+                                    {{-- Next --}}
+                                    @if ($paginator->hasMorePages())
+                                        <a href="{{ $paginator->nextPageUrl() }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Next">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                    @else
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </span>
+                                    @endif
+
+                                    {{-- Last Page --}}
+                                    @if ($paginator->hasMorePages())
+                                        <a href="{{ $paginator->url($paginator->lastPage()) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Last Page">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+                                        </a>
+                                    @else
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- QUICK JUMP DROPDOWN --}}
+                                <div class="flex items-center justify-center gap-2 mt-1">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Jump:</span>
+                                    <select onchange="window.location.href=this.value" class="h-7 py-0 pl-2 pr-6 text-[10px] font-bold text-slate-600 bg-slate-50 border-slate-200 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
+                                        @for ($p = 1; $p <= $paginator->lastPage(); $p++)
+                                            <option value="{{ $paginator->url($p) }}" {{ $p == $paginator->currentPage() ? 'selected' : '' }}>
+                                                Page {{ $p }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
+
                             </div>
                         </div>
                     @endif
@@ -533,10 +691,89 @@
                             <div class="text-center py-10 text-emerald-400 text-xs font-medium">No completed tasks found.</div>
                         @endforelse
                     </div>
+
+                    {{-- CUSTOM PAGINATOR FOR COMPLETED --}}
                     @if($cleanCompleted->hasPages())
-                        <div class="p-3 border-t border-emerald-100 bg-white rounded-b-2xl overflow-x-auto custom-scrollbar">
-                            <div class="min-w-max">
-                                {{ $cleanCompleted->links() }}
+                        <div class="p-4 border-t border-emerald-100 bg-white rounded-b-2xl">
+                            @php
+                                $paginator = $cleanCompleted;
+                                $start = max(1, $paginator->currentPage() - 1);
+                                $end = min($paginator->lastPage(), $paginator->currentPage() + 1);
+                                if ($paginator->currentPage() == 1) $end = min($paginator->lastPage(), 3);
+                                if ($paginator->currentPage() == $paginator->lastPage()) $start = max(1, $paginator->lastPage() - 2);
+                            @endphp
+                            <div class="flex flex-col items-center justify-center gap-3 w-full">
+                                <p class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-widest m-0 text-center">
+                                    Showing {{ $paginator->firstItem() }} to {{ $paginator->lastItem() }} of {{ $paginator->total() }}
+                                </p>
+                                
+                                <div class="flex items-center justify-center gap-1">
+                                    {{-- First Page --}}
+                                    @if ($paginator->onFirstPage())
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+                                        </span>
+                                    @else
+                                        <a href="{{ $paginator->url(1) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="First Page">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+                                        </a>
+                                    @endif
+
+                                    {{-- Prev --}}
+                                    @if ($paginator->onFirstPage())
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </span>
+                                    @else
+                                        <a href="{{ $paginator->previousPageUrl() }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Previous">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                        </a>
+                                    @endif
+
+                                    {{-- Numbers --}}
+                                    @for ($i = $start; $i <= $end; $i++)
+                                        @if ($i == $paginator->currentPage())
+                                            <span class="flex items-center justify-center w-7 h-7 rounded border border-emerald-500 bg-emerald-50 text-emerald-600 font-bold text-[10px] shadow-sm">{{ $i }}</span>
+                                        @else
+                                            <a href="{{ $paginator->url($i) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 font-bold text-[10px] transition shadow-sm">{{ $i }}</a>
+                                        @endif
+                                    @endfor
+
+                                    {{-- Next --}}
+                                    @if ($paginator->hasMorePages())
+                                        <a href="{{ $paginator->nextPageUrl() }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Next">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                    @else
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </span>
+                                    @endif
+
+                                    {{-- Last Page --}}
+                                    @if ($paginator->hasMorePages())
+                                        <a href="{{ $paginator->url($paginator->lastPage()) }}" class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm" title="Last Page">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+                                        </a>
+                                    @else
+                                        <span class="flex items-center justify-center w-7 h-7 rounded border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- QUICK JUMP DROPDOWN --}}
+                                <div class="flex items-center justify-center gap-2 mt-1">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Jump:</span>
+                                    <select onchange="window.location.href=this.value" class="h-7 py-0 pl-2 pr-6 text-[10px] font-bold text-slate-600 bg-slate-50 border-slate-200 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
+                                        @for ($p = 1; $p <= $paginator->lastPage(); $p++)
+                                            <option value="{{ $paginator->url($p) }}" {{ $p == $paginator->currentPage() ? 'selected' : '' }}>
+                                                Page {{ $p }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
+
                             </div>
                         </div>
                     @endif

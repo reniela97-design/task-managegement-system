@@ -44,6 +44,7 @@ class TaskController extends Controller
         $inProgressTasks = (clone $query)->where('task_status_id', 2)
                                          ->latest('task_log_datetime')
                                          ->paginate(5, ['*'], 'progress_page')
+                                         ->onEachSide(1)
                                          ->withQueryString();
 
         $pendingTasks = (clone $query)->where('task_status_id', '!=', 2)
@@ -51,11 +52,13 @@ class TaskController extends Controller
                                       ->orderBy('task_priority_id', 'asc') 
                                       ->latest('task_log_datetime')
                                       ->paginate(5, ['*'], 'todo_page')
+                                      ->onEachSide(1)
                                       ->withQueryString();
 
         $completedTasks = (clone $query)->where('task_status_id', 3)
                                         ->latest('task_date_end')
                                         ->paginate(5, ['*'], 'completed_page')
+                                        ->onEachSide(1)
                                         ->withQueryString();
 
         $hasAnyTasks = $inProgressTasks->total() > 0 || $pendingTasks->total() > 0 || $completedTasks->total() > 0;
@@ -79,7 +82,7 @@ class TaskController extends Controller
         
         $filterMonth = $request->input('filter_month', ''); 
         $filterYear = $request->input('filter_year', '');   
-        $filterProject = $request->input('filter_project', ''); // NEW: Get project filter
+        $filterProject = $request->input('filter_project', ''); 
         
         // 1. Specific Search Inputs
         $searchTodo = $request->input('search_todo', '');
@@ -143,6 +146,7 @@ class TaskController extends Controller
             ->orderBy('task_priority_id', 'asc')
             ->latest('task_log_datetime')
             ->paginate(5, ['*'], 'todo_page')
+            ->onEachSide(1) // <--- ADD THIS HERE
             ->withQueryString();
 
         $cleanInProgress = (clone $baseQuery)->where('task_status_id', 2)
@@ -156,6 +160,7 @@ class TaskController extends Controller
             ->orderBy('task_priority_id', 'asc')
             ->latest('task_log_datetime')
             ->paginate(5, ['*'], 'progress_page')
+            ->onEachSide(1) // <--- ADD THIS HERE
             ->withQueryString();
 
         $cleanCompleted = (clone $baseQuery)->where('task_status_id', 3)
@@ -168,6 +173,7 @@ class TaskController extends Controller
             })
             ->latest('task_date_end')
             ->paginate(5, ['*'], 'completed_page')
+            ->onEachSide(1) // <--- ADD THIS HERE
             ->withQueryString();
 
         // 6. Analytics Variables Calculation
