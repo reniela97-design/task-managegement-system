@@ -89,11 +89,15 @@
                     <header class="sticky top-0 z-40 px-8 py-4 w-full">
                         <div class="bg-white border border-gray-200 shadow-sm rounded-2xl px-6 py-3 flex justify-between items-center">
                             <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-4 md:hidden">
-                                    <button @click="mobileOpen = true" class="text-slate-500 hover:text-slate-800">
-                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                                    </button>
-                                </div>
+                                <!-- Pang Cellphone (Mobile Menu) -->
+                                <button @click="mobileOpen = true" class="md:hidden text-slate-500 hover:text-slate-800 focus:outline-none transition-colors">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                </button>
+                                
+                                <!-- Pang PC/Laptop (Desktop Sidebar Toggle) -->
+                                <button @click="toggleSidebar()" class="hidden md:block text-slate-500 hover:text-slate-800 focus:outline-none transition-colors">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                </button>
                                 
                                 <div class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                                     {{ $header }}
