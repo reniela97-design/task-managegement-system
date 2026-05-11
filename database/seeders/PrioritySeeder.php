@@ -10,14 +10,11 @@ class PrioritySeeder extends Seeder
 {
     public function run(): void
     {
+        // Ordered specifically to match frontend hardcoded IDs
         $priorities = [
-            ['priority_name' => 'Critical', 'priority_user_id' => 1],
-            ['priority_name' => 'High', 'priority_user_id' => 1],
-            ['priority_name' => 'Normal', 'priority_user_id' => 1],
-            ['priority_name' => 'Low', 'priority_user_id' => 1],
-            ['priority_name' => 'Very Low', 'priority_user_id' => 1],
-            ['priority_name' => 'Urgent', 'priority_user_id' => 1],
-            ['priority_name' => 'Optional', 'priority_user_id' => 1],
+            ['priority_name' => 'High', 'priority_user_id' => 1],   // Becomes ID 1
+            ['priority_name' => 'Medium', 'priority_user_id' => 1], // Becomes ID 2 (Your default "Normal" fallback)
+            ['priority_name' => 'Low', 'priority_user_id' => 1],    // Becomes ID 3
         ];
 
         foreach ($priorities as $priority) {
