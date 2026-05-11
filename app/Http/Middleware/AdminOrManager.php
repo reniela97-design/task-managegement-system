@@ -13,5 +13,7 @@ class AdminOrManager
         if (!auth()->check() || !in_array(auth()->user()->role, ['Administrator', 'Manager'])) {
             abort(403, 'Unauthorized action.');
         }
-}
+
+        return $next($request);
+    }
 }
