@@ -15,6 +15,7 @@ use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\NotificationController; 
 use App\Http\Controllers\GanttController; 
+use App\Http\Controllers\WelcomeController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,8 @@ use Illuminate\Support\Facades\Route;
 */
 // Ilisi ang imong Route::get('/') niini:
 Route::view('/', 'welcome')->name('welcome');
+
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 // Group all routes that require the user to be logged in
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -4,23 +4,17 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class MyCustomMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
+        // Check kung logged in ug kung ang iyang role naa sa listahan sa $roles
+        if (!auth()->check() || !in_array(auth()->user()->role, $roles)) {
+            abort(403, 'Unauthorized action.');
         }
 
-        foreach ($roles as $role) {
-            if (Auth::user()->hasRole($role)) {
-                return $next($request);
-            }
-        }
-
-        abort(403, 'Unauthorized. Access restricted.');
+        return $next($request);
     }
 }

@@ -16,11 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // I-redirect ang mga guests sa 'welcome' route
         $middleware->redirectGuestsTo(fn (Request $request) => route('welcome'));
 
-        // --- MAO NI IMONG I-ADD NGA LINE ---
+        // I-register ang middleware alias para sa role-based access
         $middleware->alias([
             'role' => \App\Http\Middleware\MyCustomMiddleware::class,
         ]);
-        // ------------------------------------
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
