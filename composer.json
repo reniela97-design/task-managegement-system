@@ -9,6 +9,7 @@
         "php": "^8.2",
         "laravel/breeze": "^2.3",
         "laravel/framework": "^12.0",
+        "laravel/octane": "^2.3",
         "laravel/reverb": "^1.0",
         "laravel/tinker": "^2.10.1"
     },
@@ -68,6 +69,9 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "post-install-cmd": [
+            "@php artisan octane:install --server=frankenphp"
         ]
     },
     "extra": {
