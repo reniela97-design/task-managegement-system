@@ -82,24 +82,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // =========================================================================
     //  GROUP 1: ADMIN & MANAGER RESOURCES
-    //  (Fixed: Using 'role' middleware alias instead of inline function)
     // =========================================================================
-    Route::middleware(['role:Administrator,Manager'])->group(function () {
+    Route::middleware('admin.or.manager')->group(function () {
         Route::resource('clients', ClientController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('statuses', StatusController::class);
         Route::resource('systems', SystemController::class);
         Route::resource('types', TypeController::class);
-
-        // --- Project Management ---
         Route::resource('projects', ProjectController::class);
     });
 
     // =========================================================================
     //  GROUP 2: STRICT ADMIN ONLY RESOURCES
-    //  (Fixed: Using 'role' middleware alias for route caching compatibility)
     // =========================================================================
-    Route::middleware(['role:Administrator'])->group(function () {
+    Route::middleware('admin.only')->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class); 
     });
