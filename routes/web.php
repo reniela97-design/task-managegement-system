@@ -14,10 +14,9 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\NotificationController; 
-use App\Http\Controllers\GanttController; // <-- Added Gantt Controller Import
+use App\Http\Controllers\GanttController; 
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +26,7 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('welcome');
-})->name('welcome'); // <--- This is what Laravel was looking for!
+})->name('welcome');
 
 // Group all routes that require the user to be logged in
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -36,78 +35,70 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // --- Profile Management ---
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::patch('/', 'update')->name('update');
+        Route::delete('/', 'destroy')->name('destroy');
+    });
+    
     // --- Activity Logs ---
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
     // --- Reports & Calendar ---
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/calendar', [ReportController::class, 'calendar'])->name('reports.calendar');
-    
-    // --- NEW: Save Personal Calendar Notes ---
-    Route::post('/calendar/save-note', [ReportController::class, 'saveNote'])->name('reports.saveNote');
+    Route::controller(ReportController::class)->group(function () {
+        Route::get('/reports', 'index')->name('reports.index');
+        Route::get('/calendar', 'calendar')->name('reports.calendar');
+        
+        // --- Save Personal Calendar Notes ---
+        Route::post('/calendar/save-note', 'saveNote')->name('reports.saveNote');
+    });
 
     // --- Gantt Timeline ---
     Route::get('/gantt', [GanttController::class, 'index'])->name('gantt.index');
 
     // --- Notifications ---
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
+    Route::controller(NotificationController::class)->prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}/read', 'markAsRead')->name('read');
+        Route::post('/read-all', 'markAllRead')->name('readAll');
+    });
 
     // --- Tasks Management ---
-    // 1. Registry
-    Route::get('/tasks/registry', [TaskController::class, 'registry'])->name('tasks.registry');
-    
-    // 2. Custom Task Actions (Claim, Start, Finish, Approve, Reject)
-    Route::post('/tasks/{task}/claim', [TaskController::class, 'claim'])->name('tasks.claim');
-    
-    // Task Start/Finish Buttons
-    Route::post('/tasks/{task}/start', [TaskController::class, 'start'])->name('tasks.start');
-    Route::post('/tasks/{task}/finish', [TaskController::class, 'finish'])->name('tasks.finish');
-    
-    // Task Edit Approval Workflow
-    Route::post('/tasks/{task}/approve', [TaskController::class, 'approveEdit'])->name('tasks.approve');
-    Route::post('/tasks/{task}/reject', [TaskController::class, 'rejectEdit'])->name('tasks.reject');
+    Route::controller(TaskController::class)->prefix('tasks')->name('tasks.')->group(function () {
+        // 1. Registry
+        Route::get('/registry', 'registry')->name('registry');
+        // 2. Custom Task Actions
+        Route::post('/{task}/claim', 'claim')->name('claim');
+        Route::post('/{task}/start', 'start')->name('start');
+        Route::post('/{task}/finish', 'finish')->name('finish');
+        // Task Edit Approval Workflow
+        Route::post('/{task}/approve', 'approveEdit')->name('approve');
+        Route::post('/{task}/reject', 'rejectEdit')->name('reject');
+    });
 
     // 3. Standard Resource
     Route::resource('tasks', TaskController::class);
 
-   
-
     // =========================================================================
     //  GROUP 1: ADMIN & MANAGER RESOURCES
-    //  (Manage Tab Items: Clients, Categories, Statuses, Systems, Types)
+    //  (Fixed: Using 'role' middleware alias instead of inline function)
     // =========================================================================
-    Route::group(['middleware' => function ($request, $next) {
-        if (Auth::user()->hasRole('Administrator') || Auth::user()->hasRole('Manager')) {
-            return $next($request);
-        }
-        abort(403, 'Unauthorized. Access restricted to Admins and Managers.');
-    }], function () {
+    Route::middleware(['role:Administrator,Manager'])->group(function () {
         Route::resource('clients', ClientController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('statuses', StatusController::class);
         Route::resource('systems', SystemController::class);
         Route::resource('types', TypeController::class);
 
-         // --- Project Management (Systems/Projects main view) ---
+        // --- Project Management ---
         Route::resource('projects', ProjectController::class);
     });
 
     // =========================================================================
     //  GROUP 2: STRICT ADMIN ONLY RESOURCES
-    //  (System Tab Items: Roles, User Accounts)
+    //  (Fixed: Using 'role' middleware alias for route caching compatibility)
     // =========================================================================
-    Route::group(['middleware' => function ($request, $next) {
-        if (Auth::user()->hasRole('Administrator')) {
-            return $next($request);
-        }
-        abort(403, 'Unauthorized. Only Administrators can access this area.');
-    }], function () {
+    Route::middleware(['role:Administrator'])->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class); 
     });

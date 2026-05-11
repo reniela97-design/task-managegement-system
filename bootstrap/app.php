@@ -13,8 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Redirect unauthenticated users to the 'welcome' route
+        // I-redirect ang mga guests sa 'welcome' route
         $middleware->redirectGuestsTo(fn (Request $request) => route('welcome'));
+
+        // --- MAO NI IMONG I-ADD NGA LINE ---
+        $middleware->alias([
+            'role' => \App\Http\Middleware\MyCustomMiddleware::class,
+        ]);
+        // ------------------------------------
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
