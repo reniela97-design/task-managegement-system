@@ -23,10 +23,8 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 */
-
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+// Ilisi ang imong Route::get('/') niini:
+Route::view('/', 'welcome')->name('welcome');
 
 // Group all routes that require the user to be logged in
 Route::middleware(['auth', 'verified'])->group(function () {
