@@ -17,6 +17,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\GanttController; 
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,3 +101,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('/seed-production', function () {
+    Artisan::call('db:seed', [
+        '--class' => 'TaskSeeder',
+        '--force' => true // Importante ang --force sa production
+    ]);
+    
+    return 'Boom! Naka-seed na sa Railway, Warren!';
+});
