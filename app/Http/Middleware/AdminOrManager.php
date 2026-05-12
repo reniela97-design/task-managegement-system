@@ -17,4 +17,3 @@ class AdminOrManager
         return $next($request);
     }
 }
-}
