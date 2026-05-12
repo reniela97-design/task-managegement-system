@@ -10,10 +10,11 @@ class AdminOrManager
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || !in_array(auth()->user()->role, ['Administrator', 'Manager'])) {
+        if (!auth()->check() || (!auth()->user()->hasRole('Administrator') && !auth()->user()->hasRole('Manager'))) {
             abort(403, 'Unauthorized action.');
         }
 
         return $next($request);
     }
+}
 }

@@ -11,7 +11,7 @@ class AdminOnly
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->role === 'Administrator') {
+        if (Auth::check() && Auth::user()->hasRole('Administrator')) {
             return $next($request);
         }
 
