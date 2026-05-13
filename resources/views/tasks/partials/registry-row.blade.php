@@ -70,44 +70,53 @@
     <td class="px-6 py-4">
         @php
             $statusName = $task->status->status_name ?? 'Unknown';
+            $statusLower = strtolower($statusName);
+            
+            // Default Design (Pending / To-Do)
+            $badgeColor = 'bg-blue-100 text-blue-700 border-blue-200';
+            $iconPath = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z';
+            $isSpinning = false;
+            
+            // Dynamic Text Matching (Ignores Database ID completely)
+            if (str_contains($statusLower, 'complete') || str_contains($statusLower, 'done')) {
+                $badgeColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                $iconPath = 'M5 13l4 4L19 7';
+            } elseif (str_contains($statusLower, 'progress') || str_contains($statusLower, 'review') || str_contains($statusLower, 'active')) {
+                $badgeColor = 'bg-indigo-100 text-indigo-700 border-indigo-200';
+                $iconPath = 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z';
+                $isSpinning = true;
+            } elseif (str_contains($statusLower, 'cancel') || str_contains($statusLower, 'abort')) {
+                $badgeColor = 'bg-red-100 text-red-700 border-red-200';
+                $iconPath = 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636';
+            } elseif (str_contains($statusLower, 'hold') || str_contains($statusLower, 'pause')) {
+                $badgeColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                $iconPath = 'M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z';
+            }
         @endphp
 
-        @if($task->task_status_id == 3 || strtolower($statusName) == 'completed')
-            <div class="flex flex-col gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded w-max text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase tracking-widest border border-emerald-200">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    {{ $statusName }}
-                </span>
+        <div class="flex flex-col gap-1">
+            <span class="inline-flex items-center px-2 py-0.5 rounded w-max text-[10px] font-bold uppercase tracking-widest border {{ $badgeColor }}">
+                <svg class="w-3 h-3 mr-1 {{ $isSpinning ? 'animate-spin' : '' }}" fill="none" viewBox="0 0 24 24" {{ !$isSpinning ? 'stroke="currentColor"' : '' }}>
+                    @if($isSpinning)
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="{{ $iconPath }}"></path>
+                    @else
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $iconPath }}"></path>
+                    @endif
+                </svg>
+                {{ $statusName }}
+            </span>
+            
+            @if(str_contains($statusLower, 'complete') || str_contains($statusLower, 'done'))
                 <span class="text-[9px] text-gray-500 font-medium">
                     {{ $task->task_date_end ? \Carbon\Carbon::parse($task->task_date_end)->format('M d, Y') : 'Unknown Date' }}
                 </span>
-            </div>
-        @elseif($task->task_status_id == 2 || strtolower($statusName) == 'in progress')
-            <div class="flex flex-col gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded w-max text-[10px] font-bold bg-indigo-100 text-indigo-700 uppercase tracking-widest border border-indigo-200">
-                    <svg class="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    {{ $statusName }}
-                </span>
+            @elseif(str_contains($statusLower, 'progress') || str_contains($statusLower, 'active'))
                 <span class="text-[9px] text-gray-500 font-medium">
                     Started: {{ $task->task_date_start ? \Carbon\Carbon::parse($task->task_date_start)->format('M d, Y') : '' }}
                 </span>
-            </div>
-        @elseif($task->task_status_id == 5 || strtolower($statusName) == 'canceled')
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-widest">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                {{ $statusName }}
-            </span>
-        @elseif($task->task_status_id == 4 || strtolower($statusName) == 'on hold')
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 uppercase tracking-widest">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                {{ $statusName }}
-            </span>
-        @else
-            <span class="inline-flex items-center px-2 py-0.5 rounded w-max text-[10px] font-bold bg-blue-100 text-blue-700 uppercase tracking-widest border border-blue-200">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                {{ $statusName }}
-            </span>
-        @endif
+            @endif
+        </div>
     </td>
 
     {{-- 6. Actions --}}
