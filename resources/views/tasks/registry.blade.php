@@ -175,7 +175,7 @@
                                     <th class="px-6 py-4">Due Date</th>
                                     <th class="px-6 py-4">Assignment</th>
                                     <th class="px-6 py-4">Priority</th>
-                                    <th class="px-6 py-4">Project</th>
+                                    <th class="px-6 py-4">Status</th>
                                     <th class="px-6 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -289,7 +289,7 @@
                                     <th class="px-6 py-4">Due Date</th>
                                     <th class="px-6 py-4">Assignment</th>
                                     <th class="px-6 py-4">Priority</th>
-                                    <th class="px-6 py-4">Project</th>
+                                    <th class="px-6 py-4">Status</th>
                                     <th class="px-6 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>

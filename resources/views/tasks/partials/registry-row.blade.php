@@ -68,17 +68,27 @@
 
     {{-- 5. Timeline / Dynamic --}}
     <td class="px-6 py-4">
-        @if($task->task_status_id == 3)
+        @if($task->task_status_id == 3) {{-- COMPLETED --}}
             <span class="text-[10px] uppercase tracking-wider font-bold text-emerald-600 flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 {{ $task->task_date_end ? \Carbon\Carbon::parse($task->task_date_end)->format('M d, Y') : 'Unknown' }}
             </span>
-        @elseif($task->task_status_id == 2)
+        @elseif($task->task_status_id == 2) {{-- IN PROGRESS --}}
             <span class="text-[10px] uppercase tracking-wider font-bold text-indigo-500 flex items-center gap-1">
                 <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 Started {{ $task->task_date_start ? \Carbon\Carbon::parse($task->task_date_start)->format('M d') : '' }}
             </span>
-        @else
+        @elseif($task->task_status_id == 4) {{-- ON HOLD --}}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-widest">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {{ $task->status->status_name }}
+            </span>
+        @elseif($task->task_status_id == 5) {{-- CANCELED --}}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 border border-red-200 uppercase tracking-widest">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                {{ $task->status->status_name }}
+            </span>
+        @else {{-- PENDING --}}
             <span class="inline-flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-wide font-bold">
                 <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                 {{ $task->project->project_name ?? 'General Workspace' }}
