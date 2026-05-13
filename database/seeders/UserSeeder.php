@@ -22,49 +22,49 @@ class UserSeeder extends Seeder
                 'user_name' => 'John Manager',
                 'user_email' => 'manager@gmail.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 2, // Manager
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'Jane User',
                 'user_email' => 'user@gmail.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 3, // User
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'Mike Johnson',
                 'user_email' => 'mike.johnson@example.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 4, // Project Manager
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'Sarah Williams',
                 'user_email' => 'sarah.williams@example.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 5, // Team Lead
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'David Brown',
                 'user_email' => 'david.brown@example.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 6, // Developer
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'Lisa Anderson',
                 'user_email' => 'lisa.anderson@example.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 7, // Designer
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'Robert Chen',
                 'user_email' => 'robert.chen@example.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 8, // Quality Assurance
+                'user_role_id' => 2, // User
             ],
             [
                 'user_name' => 'Maria Garcia',
                 'user_email' => 'maria.garcia@example.com',
                 'user_password' => Hash::make('password'),
-                'user_role_id' => 9, // Client
+                'user_role_id' => 2, // User
             ],
         ];
 

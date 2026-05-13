@@ -12,14 +12,7 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             ['role_name' => 'Administrator'],
-            ['role_name' => 'Manager'],      // Added Manager role
-            ['role_name' => 'User'],          // Added User role
-            ['role_name' => 'Project Manager'],
-            ['role_name' => 'Team Lead'],
-            ['role_name' => 'Developer'],
-            ['role_name' => 'Designer'],
-            ['role_name' => 'Quality Assurance'],
-            ['role_name' => 'Client'],
+            ['role_name' => 'User'],          // User role now becomes ID 2
         ];
 
         foreach ($roles as $role) {
