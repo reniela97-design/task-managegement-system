@@ -21,6 +21,11 @@ class RoleController extends Controller
             $query->where('role_name', 'like', "%{$request->search}%");
         }
 
+        $query->where(function($q) {
+            $q->where('role_name', 'like', '%Admin%')
+              ->orWhere('role_name', 'like', '%User%');
+        });
+
         $roles = $query->get();
         return view('roles.index', compact('roles'));
     }

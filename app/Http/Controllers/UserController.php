@@ -21,7 +21,7 @@ class UserController extends Controller
             ->where('user_inactive', false)
             ->whereHas('role', function ($query) {
                 $query->where('role_name', 'like', '%Admin%')
-                      ->orWhere('role_name', 'like', '%User%');
+                      ->orWhere('role_name', 'like', '%Manager%');
             })->get();
             
         return view('users.index', compact('users'));
@@ -33,7 +33,7 @@ class UserController extends Controller
         $roles = Role::where('role_inactive', false)
             ->where(function($query) {
                 $query->where('role_name', 'like', '%Admin%')
-                      ->orWhere('role_name', 'like', '%User%');
+                      ->orWhere('role_name', 'like', '%Manager%');
             })->get();
         return view('users.create', compact('roles'));
     }
@@ -69,7 +69,7 @@ class UserController extends Controller
         $roles = Role::where('role_inactive', false)
             ->where(function($query) {
                 $query->where('role_name', 'like', '%Admin%')
-                      ->orWhere('role_name', 'like', '%User%');
+                      ->orWhere('role_name', 'like', '%Manager%');
             })->get();
         return view('users.edit', compact('user', 'roles'));
     }
