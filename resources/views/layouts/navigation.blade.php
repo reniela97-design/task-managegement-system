@@ -128,8 +128,6 @@
         </a>
 
 
-
-        @if(Auth::user()->hasRole('Administrator') || Auth::user()->hasRole('Manager'))
             <div class="px-2 mt-6 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider transition-opacity duration-300 whitespace-nowrap"
                  :class="sidebarExpanded ? 'opacity-100' : 'opacity-0 hidden'">
                 Manage
@@ -163,6 +161,7 @@
             <span class="ml-3 whitespace-nowrap transition-all duration-300" :class="sidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute'">{{ __('Timeline') }}</span>
         </a>
 
+            @if(Auth::user()->hasRole('Administrator'))
             <div x-data="{ open: {{ (request()->routeIs('clients.*') || request()->routeIs('categories.*') || request()->routeIs('systems.*') || request()->routeIs('types.*') || request()->routeIs('projects.*')) ? 'true' : 'false' }} }" class="relative">
                 <button @click="open = !open; if(!sidebarExpanded) toggleSidebar();"
                     class="flex items-center w-full px-3 py-3.5 rounded-xl transition-all duration-300 group justify-between
@@ -201,7 +200,7 @@
                     </a>
                 </div>
             </div>
-        @endif
+            @endif
 
 
 

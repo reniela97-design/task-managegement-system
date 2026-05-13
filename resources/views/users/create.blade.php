@@ -38,11 +38,8 @@
                                 <x-input-label for="user_role_id" :value="__('System Role')" class="text-blue-900 font-bold uppercase text-xs tracking-wider mb-2" />
                                 <div class="relative">
                                     <select name="user_role_id" id="user_role_id" class="block mt-1 w-full rounded-lg border-gray-300 focus:border-blue-900 focus:ring-blue-900 shadow-sm appearance-none">
-                                        @foreach($roles as $role)
-                                            <option value="{{ $role->role_id }}" {{ old('user_role_id') == $role->role_id ? 'selected' : '' }}>
-                                                {{ $role->role_name }}
-                                            </option>
-                                        @endforeach
+                                        <option value="2" {{ old('user_role_id') == 2 ? 'selected' : '' }}>User</option>
+                                        <option value="1" {{ old('user_role_id') == 1 ? 'selected' : '' }}>Administrator</option>
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
