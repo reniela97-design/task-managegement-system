@@ -60,6 +60,21 @@ class TaskController extends Controller
     }
 
     /**
+     * Get only the 5 allowed statuses for dropdowns.
+     */
+    private function getValidStatuses()
+    {
+        return Status::where('status_inactive', false)
+            ->where(function($query) {
+                $query->where('status_name', 'like', '%pending%')
+                      ->orWhere('status_name', 'like', '%progress%')
+                      ->orWhere('status_name', 'like', '%complete%')
+                      ->orWhere('status_name', 'like', '%hold%')
+                      ->orWhere('status_name', 'like', '%cancel%');
+            })->get();
+    }
+
+    /**
      * Display the Tasks Registry (Advanced Table for Admins/Managers).
      */
     public function registry(Request $request): View
@@ -118,7 +133,7 @@ class TaskController extends Controller
 
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->get();
+        $statuses = $this->getValidStatuses();
         $users = User::where('user_inactive', false)->get();
 
         return view('tasks.registry', compact('inProgressTasks', 'pendingTasks', 'completedTasks', 'onHoldTasks', 'canceledTasks', 'hasAnyTasks', 'clients', 'projects', 'statuses', 'users', 'isAdminOrManager'));
@@ -298,7 +313,7 @@ class TaskController extends Controller
         $users = User::where('user_inactive', false)->get();
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->get();
+        $statuses = $this->getValidStatuses();
         $priorities = Priority::where('priority_inactive', false)->get();
         $systems = System::where('system_inactive', false)->get();
         $categories = Category::where('category_inactive', false)->get();
@@ -391,7 +406,7 @@ class TaskController extends Controller
         $users = User::where('user_inactive', false)->get();
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->get();
+        $statuses = $this->getValidStatuses();
         $priorities = Priority::where('priority_inactive', false)->get();
         $systems = System::where('system_inactive', false)->get();
         $categories = Category::where('category_inactive', false)->get();
