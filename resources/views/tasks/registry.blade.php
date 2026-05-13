@@ -232,6 +232,82 @@
                 </div>
                 @endif
 
+                {{-- 4. ON HOLD SECTION --}}
+                @if($onHoldTasks->isNotEmpty())
+                <div class="bg-white overflow-hidden shadow-lg rounded-2xl border border-slate-200 mb-8 relative">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-slate-500"></div>
+                    <div class="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-slate-900 font-black uppercase text-sm tracking-widest flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                            On Hold
+                        </h3>
+                        <span class="bg-slate-200 text-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $onHoldTasks->total() }} Tasks</span>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="bg-slate-50/50 border-b border-slate-50 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                                    <th class="px-6 py-4 pl-8">Task Title</th>
+                                    <th class="px-6 py-4">Due Date</th>
+                                    <th class="px-6 py-4">Assignment</th>
+                                    <th class="px-6 py-4">Priority</th>
+                                    <th class="px-6 py-4">Project</th>
+                                    <th class="px-6 py-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                @foreach($onHoldTasks as $task)
+                                    @include('tasks.partials.registry-row', ['task' => $task, 'hoverColor' => 'slate'])
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($onHoldTasks->hasPages())
+                        <div class="px-6 py-3 bg-slate-50/30 border-t border-slate-100">
+                            {{ $onHoldTasks->links() }}
+                        </div>
+                    @endif
+                </div>
+                @endif
+
+                {{-- 5. CANCELED SECTION --}}
+                @if($canceledTasks->isNotEmpty())
+                <div class="bg-white overflow-hidden shadow-lg rounded-2xl border border-red-200 mb-4 relative">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                    <div class="bg-red-50/50 px-6 py-4 border-b border-red-100 flex items-center justify-between">
+                        <h3 class="text-red-900 font-black uppercase text-sm tracking-widest flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                            Canceled / Aborted
+                        </h3>
+                        <span class="bg-red-200 text-red-800 text-[10px] font-bold px-2.5 py-1 rounded-full">{{ $canceledTasks->total() }} Tasks</span>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="bg-slate-50/50 border-b border-red-50 text-[10px] uppercase tracking-widest text-red-500 font-bold">
+                                    <th class="px-6 py-4 pl-8">Task Title</th>
+                                    <th class="px-6 py-4">Due Date</th>
+                                    <th class="px-6 py-4">Assignment</th>
+                                    <th class="px-6 py-4">Priority</th>
+                                    <th class="px-6 py-4">Project</th>
+                                    <th class="px-6 py-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-red-50">
+                                @foreach($canceledTasks as $task)
+                                    @include('tasks.partials.registry-row', ['task' => $task, 'hoverColor' => 'red'])
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($canceledTasks->hasPages())
+                        <div class="px-6 py-3 bg-red-50/30 border-t border-red-100">
+                            {{ $canceledTasks->links() }}
+                        </div>
+                    @endif
+                </div>
+                @endif
+
             @endif
 
         </div>
