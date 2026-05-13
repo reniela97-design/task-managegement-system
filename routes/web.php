@@ -79,9 +79,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('tasks', TaskController::class);
 
     // =========================================================================
-    //  GROUP 1: ADMIN & MANAGER RESOURCES
+    //  GROUP 1: ADMIN RESOURCES (Kaniadto Admin & Manager)
     // =========================================================================
-    Route::middleware('admin.or.manager')->group(function () {
+    Route::middleware('admin.only')->group(function () {
         Route::resource('clients', ClientController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('statuses', StatusController::class);
@@ -94,7 +94,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //  GROUP 2: STRICT ADMIN ONLY RESOURCES
     // =========================================================================
     Route::middleware('admin.only')->group(function () {
-        Route::resource('roles', RoleController::class);
+        // Gipabilin lang ang 'index' aron makita ang listahan, gi-remove na ang add/edit/delete
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::resource('users', UserController::class); 
     });
 

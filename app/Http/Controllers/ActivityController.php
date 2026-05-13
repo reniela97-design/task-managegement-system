@@ -22,22 +22,13 @@ class ActivityController extends Controller
         if ($currentUser->hasRole('Administrator')) {
             // ADMIN: Sees EVERYTHING (No filter added)
         } 
-        elseif ($currentUser->hasRole('Manager')) {
-            // MANAGER: Sees OWN logs OR logs of 'User' role
-            $query->where(function($q) use ($currentUser) {
-                $q->where('activity_user_id', $currentUser->user_id) // Show their own
-                  ->orWhereHas('user.role', function($roleQuery) {
-                      $roleQuery->where('role_name', 'User'); // Show Standard Users
-                  });
-            });
-        } 
         else {
             // STANDARD USER: Sees ONLY their own logs
             $query->where('activity_user_id', $currentUser->user_id);
         }
 
         // 3. Apply Account Filter (If requested by Admin or Manager)
-        if (($currentUser->hasRole('Administrator') || $currentUser->hasRole('Manager')) && $request->filled('user_id')) {
+        if ($currentUser->hasRole('Administrator') && $request->filled('user_id')) {
             $query->where('activity_user_id', $request->user_id);
         }
 
@@ -46,7 +37,7 @@ class ActivityController extends Controller
 
         // 4. Fetch users for the dropdown (only needed for Admins/Managers)
         $users = collect();
-        if ($currentUser->hasRole('Administrator') || $currentUser->hasRole('Manager')) {
+        if ($currentUser->hasRole('Administrator')) {
             $users = User::where('user_inactive', false)->get();
         }
 
