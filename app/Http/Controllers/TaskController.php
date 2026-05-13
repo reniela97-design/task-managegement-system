@@ -21,6 +21,45 @@ use Carbon\Carbon;
 class TaskController extends Controller
 {
     /**
+     * Map database statuses to system categories based on text match.
+     */
+    private function getStatusMapping()
+    {
+        $statuses = Status::all();
+        $mapping = [
+            'pending' => [],
+            'progress' => [],
+            'completed' => [],
+            'onhold' => [],
+            'canceled' => []
+        ];
+
+        foreach ($statuses as $status) {
+            $name = strtolower($status->status_name);
+            if (str_contains($name, 'complete') || str_contains($name, 'done')) {
+                $mapping['completed'][] = $status->status_id;
+            } elseif (str_contains($name, 'progress') || str_contains($name, 'active')) {
+                $mapping['progress'][] = $status->status_id;
+            } elseif (str_contains($name, 'cancel') || str_contains($name, 'abort') || str_contains($name, 'review')) {
+                $mapping['canceled'][] = $status->status_id;
+            } elseif (str_contains($name, 'hold') || str_contains($name, 'pause')) {
+                $mapping['onhold'][] = $status->status_id;
+            } else {
+                $mapping['pending'][] = $status->status_id;
+            }
+        }
+
+        // Fallbacks to avoid empty array errors in whereIn
+        if (empty($mapping['pending'])) $mapping['pending'] = [-1];
+        if (empty($mapping['progress'])) $mapping['progress'] = [-1];
+        if (empty($mapping['completed'])) $mapping['completed'] = [-1];
+        if (empty($mapping['onhold'])) $mapping['onhold'] = [-1];
+        if (empty($mapping['canceled'])) $mapping['canceled'] = [-1];
+
+        return $mapping;
+    }
+
+    /**
      * Display the Tasks Registry (Advanced Table for Admins/Managers).
      */
     public function registry(Request $request): View
@@ -42,32 +81,34 @@ class TaskController extends Controller
             $query->where('task_assign_to', $user->user_id);
         }
 
-        $inProgressTasks = (clone $query)->where('task_status_id', 2)
+        $statusMap = $this->getStatusMapping();
+
+        $inProgressTasks = (clone $query)->whereIn('task_status_id', $statusMap['progress'])
                                          ->latest('task_log_datetime')
                                          ->paginate(5, ['*'], 'progress_page')
                                          ->onEachSide(1)
                                          ->withQueryString();
 
-        $pendingTasks = (clone $query)->where('task_status_id', 1)
+        $pendingTasks = (clone $query)->whereIn('task_status_id', $statusMap['pending'])
                                       ->orderBy('task_priority_id', 'asc') 
                                       ->latest('task_log_datetime')
                                       ->paginate(5, ['*'], 'todo_page')
                                       ->onEachSide(1)
                                       ->withQueryString();
 
-        $completedTasks = (clone $query)->where('task_status_id', 3)
+        $completedTasks = (clone $query)->whereIn('task_status_id', $statusMap['completed'])
                                         ->latest('task_date_end')
                                         ->paginate(5, ['*'], 'completed_page')
                                         ->onEachSide(1)
                                         ->withQueryString();
 
-        $onHoldTasks = (clone $query)->where('task_status_id', 4)
+        $onHoldTasks = (clone $query)->whereIn('task_status_id', $statusMap['onhold'])
                                      ->latest('task_log_datetime')
                                      ->paginate(5, ['*'], 'onhold_page')
                                      ->onEachSide(1)
                                      ->withQueryString();
 
-        $canceledTasks = (clone $query)->where('task_status_id', 5)
+        $canceledTasks = (clone $query)->whereIn('task_status_id', $statusMap['canceled'])
                                        ->latest('task_log_datetime')
                                        ->paginate(5, ['*'], 'canceled_page')
                                        ->onEachSide(1)
@@ -77,7 +118,7 @@ class TaskController extends Controller
 
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->whereIn('status_id', [1, 2, 3, 4, 5])->get();
+        $statuses = Status::where('status_inactive', false)->get();
         $users = User::where('user_inactive', false)->get();
 
         return view('tasks.registry', compact('inProgressTasks', 'pendingTasks', 'completedTasks', 'onHoldTasks', 'canceledTasks', 'hasAnyTasks', 'clients', 'projects', 'statuses', 'users', 'isAdminOrManager'));
@@ -104,10 +145,12 @@ class TaskController extends Controller
         // NEW: Fetch all active projects for the dropdown
         $projects = Project::where('project_inactive', false)->get(); 
 
+        $statusMap = $this->getStatusMapping();
+
         // 2. Base query for Unassigned Pool
         $unassignedQuery = Task::whereNull('task_assign_to')
                                ->where('task_inactive', false)
-                               ->where('task_status_id', '!=', 3) 
+                               ->whereNotIn('task_status_id', $statusMap['completed']) 
                                ->latest('task_log_datetime');
                                
         // NEW: Apply project filter to unassigned
@@ -141,13 +184,13 @@ class TaskController extends Controller
         }
 
         // 4. Fetch Unpaginated for Analytics/Charts (Stats stay accurate regardless of search)
-        $allAssigned = (clone $baseQuery)->orderByRaw("CASE WHEN task_status_id = 3 THEN task_log_datetime ELSE task_due_date END ASC")->get();
+        $completedIdsCsv = implode(',', $statusMap['completed']);
+        $allAssigned = (clone $baseQuery)->orderByRaw("CASE WHEN task_status_id IN ($completedIdsCsv) THEN task_log_datetime ELSE task_due_date END ASC")->get();
 
         // 5. Fetch Paginated for Kanban Columns with Partial Match Filtering
         $approvalTasks = (clone $baseQuery)->where('task_edit_pending', true)->get();
 
-        $cleanPending = (clone $baseQuery)->where('task_status_id', '!=', 2)
-            ->where('task_status_id', '!=', 3)
+        $cleanPending = (clone $baseQuery)->whereIn('task_status_id', $statusMap['pending'])
             ->where('task_edit_pending', false)
             ->when($searchTodo, function ($query, $searchTodo) {
                 $query->where(function($q) use ($searchTodo) {
@@ -161,7 +204,7 @@ class TaskController extends Controller
             ->onEachSide(1) // <--- ADD THIS HERE
             ->withQueryString();
 
-        $cleanInProgress = (clone $baseQuery)->where('task_status_id', 2)
+        $cleanInProgress = (clone $baseQuery)->whereIn('task_status_id', $statusMap['progress'])
             ->where('task_edit_pending', false)
             ->when($searchProgress, function ($query, $searchProgress) {
                 $query->where(function($q) use ($searchProgress) {
@@ -175,7 +218,7 @@ class TaskController extends Controller
             ->onEachSide(1) // <--- ADD THIS HERE
             ->withQueryString();
 
-        $cleanCompleted = (clone $baseQuery)->where('task_status_id', 3)
+        $cleanCompleted = (clone $baseQuery)->whereIn('task_status_id', $statusMap['completed'])
             ->where('task_edit_pending', false)
             ->when($searchCompleted, function ($query, $searchCompleted) {
                 $query->where(function($q) use ($searchCompleted) {
@@ -189,15 +232,15 @@ class TaskController extends Controller
             ->withQueryString();
 
         // 6. Analytics Variables Calculation
-        $inProgressTasksForStats = $allAssigned->where('task_status_id', 2);
-        $completedTasksForStats  = $allAssigned->where('task_status_id', 3); 
-        $pendingTasksForStats    = $allAssigned->where('task_status_id', '!=', 2)->where('task_status_id', '!=', 3);
+        $inProgressTasksForStats = $allAssigned->whereIn('task_status_id', $statusMap['progress']);
+        $completedTasksForStats  = $allAssigned->whereIn('task_status_id', $statusMap['completed']); 
+        $pendingTasksForStats    = $allAssigned->whereIn('task_status_id', $statusMap['pending']);
 
         $totalTasks = $allAssigned->count();
         $completedCount = $completedTasksForStats->count();
         $activeCount = $inProgressTasksForStats->count() + $pendingTasksForStats->count();
         
-        $overdueCount = $allAssigned->where('task_status_id', '!=', 3)
+        $overdueCount = $allAssigned->whereNotIn('task_status_id', $statusMap['completed'])
                                     ->filter(function($task) {
                                         return $task->task_due_date && Carbon::parse($task->task_due_date)->endOfDay()->isPast();
                                     })->count();
@@ -255,7 +298,7 @@ class TaskController extends Controller
         $users = User::where('user_inactive', false)->get();
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->whereIn('status_id', [1, 2, 3, 4, 5])->get();
+        $statuses = Status::where('status_inactive', false)->get();
         $priorities = Priority::where('priority_inactive', false)->get();
         $systems = System::where('system_inactive', false)->get();
         $categories = Category::where('category_inactive', false)->get();
@@ -335,7 +378,8 @@ class TaskController extends Controller
     public function edit(Task $task): View
     {
         if ($task->task_inactive) abort(404);
-        if ($task->task_status_id == 3) abort(403, 'Completed tasks cannot be edited.');
+        $statusMap = $this->getStatusMapping();
+        if (in_array($task->task_status_id, $statusMap['completed'])) abort(403, 'Completed tasks cannot be edited.');
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -347,7 +391,7 @@ class TaskController extends Controller
         $users = User::where('user_inactive', false)->get();
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->whereIn('status_id', [1, 2, 3, 4, 5])->get();
+        $statuses = Status::where('status_inactive', false)->get();
         $priorities = Priority::where('priority_inactive', false)->get();
         $systems = System::where('system_inactive', false)->get();
         $categories = Category::where('category_inactive', false)->get();
@@ -358,7 +402,8 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task): RedirectResponse
     {
-        if ($task->task_status_id == 3) abort(403, 'Completed tasks cannot be updated.');
+        $statusMap = $this->getStatusMapping();
+        if (in_array($task->task_status_id, $statusMap['completed'])) abort(403, 'Completed tasks cannot be updated.');
         
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -470,10 +515,12 @@ class TaskController extends Controller
             abort(403, 'You cannot start a task assigned to someone else.');
         }
 
+        $statusMap = $this->getStatusMapping();
+
         $task->update([
             'task_date_start' => now()->toDateString(),
             'task_time_start' => now()->toTimeString(),
-            'task_status_id'  => 2, 
+            'task_status_id'  => $statusMap['progress'][0] !== -1 ? $statusMap['progress'][0] : 2, 
         ]);
 
         $this->logActivity('Started working on task: ' . $task->task_title);
@@ -490,10 +537,12 @@ class TaskController extends Controller
             abort(403, 'You cannot finish a task assigned to someone else.');
         }
 
+        $statusMap = $this->getStatusMapping();
+
         $updates = [
             'task_date_end' => $request->input('task_date_end') ?: now()->toDateString(),
             'task_time_end' => $request->input('task_time_end') ?: now()->toTimeString(),
-            'task_status_id' => 3, 
+            'task_status_id' => $statusMap['completed'][0] !== -1 ? $statusMap['completed'][0] : 3, 
         ];
 
         if (is_null($task->task_date_start)) {
