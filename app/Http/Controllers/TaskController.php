@@ -48,8 +48,7 @@ class TaskController extends Controller
                                          ->onEachSide(1)
                                          ->withQueryString();
 
-        $pendingTasks = (clone $query)->where('task_status_id', '!=', 2)
-                                      ->where('task_status_id', '!=', 3)
+        $pendingTasks = (clone $query)->where('task_status_id', 1)
                                       ->orderBy('task_priority_id', 'asc') 
                                       ->latest('task_log_datetime')
                                       ->paginate(5, ['*'], 'todo_page')
@@ -62,14 +61,26 @@ class TaskController extends Controller
                                         ->onEachSide(1)
                                         ->withQueryString();
 
-        $hasAnyTasks = $inProgressTasks->total() > 0 || $pendingTasks->total() > 0 || $completedTasks->total() > 0;
+        $onHoldTasks = (clone $query)->where('task_status_id', 4)
+                                     ->latest('task_log_datetime')
+                                     ->paginate(5, ['*'], 'onhold_page')
+                                     ->onEachSide(1)
+                                     ->withQueryString();
+
+        $canceledTasks = (clone $query)->where('task_status_id', 5)
+                                       ->latest('task_log_datetime')
+                                       ->paginate(5, ['*'], 'canceled_page')
+                                       ->onEachSide(1)
+                                       ->withQueryString();
+
+        $hasAnyTasks = $inProgressTasks->total() > 0 || $pendingTasks->total() > 0 || $completedTasks->total() > 0 || $onHoldTasks->total() > 0 || $canceledTasks->total() > 0;
 
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->get();
+        $statuses = Status::where('status_inactive', false)->whereIn('status_id', [1, 2, 3, 4, 5])->get();
         $users = User::where('user_inactive', false)->get();
 
-        return view('tasks.registry', compact('inProgressTasks', 'pendingTasks', 'completedTasks', 'hasAnyTasks', 'clients', 'projects', 'statuses', 'users', 'isAdminOrManager'));
+        return view('tasks.registry', compact('inProgressTasks', 'pendingTasks', 'completedTasks', 'onHoldTasks', 'canceledTasks', 'hasAnyTasks', 'clients', 'projects', 'statuses', 'users', 'isAdminOrManager'));
     }
 
     /**
@@ -244,7 +255,7 @@ class TaskController extends Controller
         $users = User::where('user_inactive', false)->get();
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->get();
+        $statuses = Status::where('status_inactive', false)->whereIn('status_id', [1, 2, 3, 4, 5])->get();
         $priorities = Priority::where('priority_inactive', false)->get();
         $systems = System::where('system_inactive', false)->get();
         $categories = Category::where('category_inactive', false)->get();
@@ -336,7 +347,7 @@ class TaskController extends Controller
         $users = User::where('user_inactive', false)->get();
         $clients = Client::where('client_inactive', false)->get();
         $projects = Project::where('project_inactive', false)->get();
-        $statuses = Status::where('status_inactive', false)->get();
+        $statuses = Status::where('status_inactive', false)->whereIn('status_id', [1, 2, 3, 4, 5])->get();
         $priorities = Priority::where('priority_inactive', false)->get();
         $systems = System::where('system_inactive', false)->get();
         $categories = Category::where('category_inactive', false)->get();
