@@ -36,7 +36,7 @@ class DashboardController extends Controller
         }
 
         // Permission Scope (Admins/Managers can filter)
-        if ($user->hasRole('Administrator') || $user->hasRole('Manager')) {
+        if ($user->hasRole('Administrator')) {
             if ($request->has('user_id') && !empty($request->user_id)) {
                 $query->where('task_assign_to', $request->user_id);
             }

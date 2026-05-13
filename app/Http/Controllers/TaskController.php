@@ -27,7 +27,8 @@ class TaskController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $isAdminOrManager = $user->hasRole('Administrator') || $user->hasRole('Manager');
+        // Gibilin lang nako ang variable name aron dili maguba ang blade kung gigamit kini didto
+        $isAdminOrManager = $user->hasRole('Administrator');
 
         $query = Task::with(['project', 'client', 'status', 'assignee', 'priority', 'system', 'category', 'type']);
         $query->where('task_inactive', false);
@@ -78,7 +79,7 @@ class TaskController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $isAdminOrManager = $user->hasRole('Administrator') || $user->hasRole('Manager');
+        $isAdminOrManager = $user->hasRole('Administrator');
         
         $filterMonth = $request->input('filter_month', ''); 
         $filterYear = $request->input('filter_year', '');   
@@ -272,7 +273,7 @@ class TaskController extends Controller
         $user = Auth::user();
         $assignTo = $user->user_id;
         
-        if (($user->hasRole('Administrator') || $user->hasRole('Manager')) && $request->filled('task_assign_to')) {
+        if ($user->hasRole('Administrator') && $request->filled('task_assign_to')) {
             $assignTo = $request->task_assign_to;
         }
 
@@ -312,7 +313,7 @@ class TaskController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         
-        if (!$user->hasRole('Administrator') && !$user->hasRole('Manager') && $task->task_assign_to !== $user->user_id) {
+        if (!$user->hasRole('Administrator') && $task->task_assign_to !== $user->user_id) {
             abort(403, 'Unauthorized access.');
         }
         
@@ -328,7 +329,7 @@ class TaskController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         
-        if (!$user->hasRole('Administrator') && !$user->hasRole('Manager') && $task->task_assign_to !== $user->user_id) {
+        if (!$user->hasRole('Administrator') && $task->task_assign_to !== $user->user_id) {
             abort(403, 'You are only allowed to edit tasks assigned to you.');
         }
 
@@ -351,11 +352,11 @@ class TaskController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         
-        if (!$user->hasRole('Administrator') && !$user->hasRole('Manager') && $task->task_assign_to !== $user->user_id) {
+        if (!$user->hasRole('Administrator') && $task->task_assign_to !== $user->user_id) {
             abort(403, 'You are only allowed to edit tasks assigned to you.');
         }
 
-        $isAdminOrManager = $user->hasRole('Administrator') || $user->hasRole('Manager');
+        $isAdminOrManager = $user->hasRole('Administrator');
         $originalAssigneeId = $task->task_assign_to;
 
         $validated = $request->validate([
@@ -454,7 +455,7 @@ class TaskController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if ($user->user_id !== $task->task_assign_to && !$user->hasRole('Administrator') && !$user->hasRole('Manager')) {
+        if ($user->user_id !== $task->task_assign_to && !$user->hasRole('Administrator')) {
             abort(403, 'You cannot start a task assigned to someone else.');
         }
 
@@ -474,7 +475,7 @@ class TaskController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if ($user->user_id !== $task->task_assign_to && !$user->hasRole('Administrator') && !$user->hasRole('Manager')) {
+        if ($user->user_id !== $task->task_assign_to && !$user->hasRole('Administrator')) {
             abort(403, 'You cannot finish a task assigned to someone else.');
         }
 
@@ -500,7 +501,7 @@ class TaskController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if (!$user->hasRole('Administrator') && !$user->hasRole('Manager')) {
+        if (!$user->hasRole('Administrator')) {
             abort(403, 'Unauthorized action.');
         }
     }

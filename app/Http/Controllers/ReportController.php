@@ -34,7 +34,7 @@ class ReportController extends Controller
 
         $query = Task::with(['project', 'client', 'status', 'assignee'])->where('task_inactive', false);
 
-        if ($user->hasRole('Administrator') || $user->hasRole('Manager')) {
+        if ($user->hasRole('Administrator')) {
             if ($request->filled('user_id')) {
                 $query->where('task_assign_to', $request->user_id);
             }
@@ -94,7 +94,7 @@ class ReportController extends Controller
         
         $query = Task::with(['status', 'system', 'client', 'project', 'priority', 'assignee']);
 
-        if ($user->hasRole('Administrator') || $user->hasRole('Manager')) {
+        if ($user->hasRole('Administrator')) {
             if ($request->has('user_id') && !empty($request->user_id)) {
                 $query->where('task_assign_to', $request->user_id);
             }
@@ -203,7 +203,7 @@ class ReportController extends Controller
 
         // 1. Determine which user's tasks to load in the sidebar
         $targetUserId = $user->user_id;
-        if (($user->hasRole('Administrator') || $user->hasRole('Manager')) && $request->filled('user_id')) {
+        if ($user->hasRole('Administrator') && $request->filled('user_id')) {
             $targetUserId = $request->user_id;
         }
 

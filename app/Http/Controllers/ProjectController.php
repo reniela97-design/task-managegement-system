@@ -30,14 +30,6 @@ class ProjectController extends Controller
 
         if ($user->hasRole('Administrator')) {
             $projects = $query->get();
-        } elseif ($user->hasRole('Manager')) {
-            $managerRoleIds = Role::where('role_name', 'Manager')->pluck('role_id');
-            $managerUserIds = User::whereIn('user_role_id', $managerRoleIds)->pluck('user_id');
-
-            $projects = $query->where(function ($q) use ($user, $managerUserIds) {
-                $q->where('project_user_id', $user->user_id)
-                  ->orWhereIn('project_user_id', $managerUserIds);
-            })->get();
         } else {
             $projects = $query->where('project_user_id', $user->user_id)->get();
         }
@@ -47,7 +39,7 @@ class ProjectController extends Controller
 
     public function create(): View
     {
-        if (!Auth::user()->hasRole('Administrator') && !Auth::user()->hasRole('Manager')) {
+        if (!Auth::user()->hasRole('Administrator')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -57,7 +49,7 @@ class ProjectController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (!Auth::user()->hasRole('Administrator') && !Auth::user()->hasRole('Manager')) {
+        if (!Auth::user()->hasRole('Administrator')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -112,7 +104,7 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): RedirectResponse
     {
-        if (!Auth::user()->hasRole('Administrator') && !Auth::user()->hasRole('Manager')) {
+        if (!Auth::user()->hasRole('Administrator')) {
              abort(403, 'Unauthorized action.');
         }
 
