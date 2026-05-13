@@ -36,13 +36,13 @@ class TaskController extends Controller
 
         foreach ($statuses as $status) {
             $name = strtolower($status->status_name);
-            if (str_contains($name, 'complete') || str_contains($name, 'done')) {
+            if (str_contains($name, 'complete')) {
                 $mapping['completed'][] = $status->status_id;
-            } elseif (str_contains($name, 'progress') || str_contains($name, 'active')) {
+            } elseif (str_contains($name, 'progress')) {
                 $mapping['progress'][] = $status->status_id;
-            } elseif (str_contains($name, 'cancel') || str_contains($name, 'abort') || str_contains($name, 'review')) {
+            } elseif (str_contains($name, 'cancel')) {
                 $mapping['canceled'][] = $status->status_id;
-            } elseif (str_contains($name, 'hold') || str_contains($name, 'pause')) {
+            } elseif (str_contains($name, 'hold')) {
                 $mapping['onhold'][] = $status->status_id;
             } else {
                 $mapping['pending'][] = $status->status_id;

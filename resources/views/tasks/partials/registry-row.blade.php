@@ -78,16 +78,16 @@
             $isSpinning = false;
             
             // Dynamic Text Matching (with ID fallback)
-            if (str_contains($statusLower, 'complete') || str_contains($statusLower, 'done') || $task->task_status_id == 3) {
+            if (str_contains($statusLower, 'complete') || $task->task_status_id == 3) {
                 $badgeColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
                 $iconPath = 'M5 13l4 4L19 7';
-            } elseif (str_contains($statusLower, 'cancel') || str_contains($statusLower, 'abort') || $task->task_status_id == 5) {
+            } elseif (str_contains($statusLower, 'cancel') || $task->task_status_id == 5) {
                 $badgeColor = 'bg-red-100 text-red-700 border-red-200';
                 $iconPath = 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636';
-            } elseif (str_contains($statusLower, 'hold') || str_contains($statusLower, 'pause') || $task->task_status_id == 4) {
+            } elseif (str_contains($statusLower, 'hold') || $task->task_status_id == 4) {
                 $badgeColor = 'bg-amber-100 text-amber-700 border-amber-200';
                 $iconPath = 'M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z';
-            } elseif (str_contains($statusLower, 'progress') || str_contains($statusLower, 'review') || str_contains($statusLower, 'active') || $task->task_status_id == 2) {
+            } elseif (str_contains($statusLower, 'progress') || $task->task_status_id == 2) {
                 $badgeColor = 'bg-indigo-100 text-indigo-700 border-indigo-200';
                 $iconPath = 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z';
                 $isSpinning = true;
@@ -107,11 +107,11 @@
                 {{ $statusName }}
             </span>
             
-            @if(str_contains($statusLower, 'complete') || str_contains($statusLower, 'done'))
+            @if(str_contains($statusLower, 'complete'))
                 <span class="text-[9px] text-gray-500 font-medium">
                     {{ $task->task_date_end ? \Carbon\Carbon::parse($task->task_date_end)->format('M d, Y') : 'Unknown Date' }}
                 </span>
-            @elseif(str_contains($statusLower, 'progress') || str_contains($statusLower, 'active'))
+            @elseif(str_contains($statusLower, 'progress'))
                 <span class="text-[9px] text-gray-500 font-medium">
                     Started: {{ $task->task_date_start ? \Carbon\Carbon::parse($task->task_date_start)->format('M d, Y') : '' }}
                 </span>
